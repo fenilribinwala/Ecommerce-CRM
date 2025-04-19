@@ -13,7 +13,7 @@
       position="top right"
     />
     <div v-if="isLoading">
-      <fingerprint-spinner class="spinner" :animation-duration="1500" :size="150" color="#136a8a"/>
+      <loading-spinner class="spinner" :size="150" color="#136a8a"/>
     </div>
 
     <router-view/>
@@ -22,14 +22,14 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { FingerprintSpinner } from 'epic-spinners';
+import { Spinner as LoadingSpinner } from 'vue-loading-spinner';
 import { eventHub } from '@/utils/EventHub';
 import moment from 'moment';
 
 export default {
   name: 'app',
   components: {
-    FingerprintSpinner,
+    LoadingSpinner,
   },
 
   async created() {
