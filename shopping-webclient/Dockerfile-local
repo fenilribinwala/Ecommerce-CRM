@@ -25,7 +25,7 @@ COPY package*.json /app/
 # Remove any existing node_modules and package-lock
 RUN rm -rf node_modules package-lock.json
 
-# Install dependencies
+# Install dependencies with vue-loading-spinner
 RUN npm install --legacy-peer-deps --no-optional --force --ignore-scripts
 
 # Copy the rest of the application
