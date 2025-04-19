@@ -12,8 +12,8 @@
       classes="vue-notification toast-notification"
       position="top right"
     />
-    <div v-if="isLoading">
-      <fingerprint-spinner class="spinner" :animation-duration="1500" :size="150" color="#136a8a"/>
+    <div v-if="isLoading" class="spinner-container">
+      <pulse-loader class="spinner" :loading="true" :size="150" color="#136a8a"/>
     </div>
 
     <router-view/>
@@ -22,14 +22,14 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import { FingerprintSpinner } from 'epic-spinners';
+import PulseLoader from 'vue-loading-spinner';
 import { eventHub } from '@/utils/EventHub';
 import moment from 'moment';
 
 export default {
   name: 'app',
   components: {
-    FingerprintSpinner,
+    PulseLoader,
   },
 
   async created() {
@@ -49,8 +49,10 @@ export default {
 
   data() {
     return {
-      refCount: 0,
       isLoading: false,
+      sessionTimeout: 3600000,
+      sessionTimeoutId: null,
+      refCount: 0,
     };
   },
 
@@ -62,41 +64,36 @@ export default {
   },
 
   methods: {
-    async initiateApp() {
-      try {
-        await this.$store.dispatch('cartStore/getCart');
-        await this.$store.dispatch('shippingStore/addressAction', {
-          address: null,
-          action: 'get',
-        });
+    initiateApp() {
+      this.$store.dispatch('cartStore/getCart');
+      this.$store.dispatch('shippingStore/addressAction', {
+        address: null,
+        action: 'get',
+      });
 
-        if (this.checkoutInitiated) {
-          const reqObj = {
-            address: this.selectedAddress,
-            shippingMethod: this.shippingMethod,
-          };
+      if (this.checkoutInitiated) {
+        const reqObj = {
+          address: this.selectedAddress,
+          shippingMethod: this.shippingMethod,
+        };
 
-          await this.$store.dispatch('cartStore/createCheckout', reqObj);
-        }
-      } catch (error) {
-        console.log(error);
+        this.$store.dispatch('cartStore/createCheckout', reqObj);
       }
     },
+
     setLoading() {
       this.refCount += 1;
       this.isLoading = true;
+      this.checkSessionTimeout();
     },
 
     checkSessionTimeout() {
-      const dt = localStorage.getItem('sessionDT');
-      if (!dt) {
-        return false;
+      if (this.sessionTimeoutId) {
+        clearTimeout(this.sessionTimeoutId);
       }
-      const diff = moment.duration(moment().diff(moment(dt)));
-      if (diff.asMinutes() >= 30) return false;
-
-      localStorage.setItem('sessionDT', moment().format());
-      return true;
+      this.sessionTimeoutId = setTimeout(() => {
+        this.$store.dispatch('authStore/logout');
+      }, this.sessionTimeout);
     },
 
     unsetLoading() {
@@ -104,7 +101,6 @@ export default {
         const isActive = this.checkSessionTimeout();
 
         if (!isActive) {
-          console.log('This is also happening while unsetting loading');
           this.$store.commit('shippingStore/resetAddresses');
           this.$store.commit('cartStore/resetOrders');
           this.$store.commit('authStore/logoutUser');
@@ -129,8 +125,56 @@ export default {
 };
 </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css?family=Karla');
+<style lang="scss">
+.spinner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .spinner {
+    transform: scale(1.5);
+  }
+}
+
+.main-notification {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.toast-notification {
+  margin: 10px 0;
+  padding: 10px 20px;
+  border-radius: 4px;
+  background: #44A4FC;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.toast-noti {
+  margin-top: 60px;
+}
+
+.notification {
+  &.warn {
+    background: #ffb648;
+  }
+
+  &.error {
+    background: #E54D42;
+  }
+
+  &.success {
+    background: #68CD86;
+  }
+}
 
 #app {
   font-family: 'Quicksand','Raleway', sans-serif;
