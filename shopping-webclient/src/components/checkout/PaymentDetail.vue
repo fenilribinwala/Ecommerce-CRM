@@ -10,115 +10,123 @@
     </div>
     <!-- <b-btn disabled class="primary-button">Pay with Khalti</b-btn> -->
     <div class="align-center">
-      <khalti :text="'Pay with Khalti'" :config="khaltiConfig" :total="totalPrice" />
+      <khalti :text="'Pay with Khalti'" :config="khaltiConfig" :total="totalPrice" @success="startKhaltiPayment" />
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
+import { useNotification } from '@kyvg/vue3-notification';
 import StripePayment from '@/components/checkout/stripe/Stripe.vue';
-import { mapGetters } from 'vuex';
-import notification from '@/services/notificationService';
 import paymentService from '@/services/paymentService';
 import Config from '@/config.json';
 import { Khalti } from '@/components/checkout/khalti';
 
-export default {
-  name: 'PaymentDetail',
-  components: {
-    StripePayment,
-    Khalti,
-  },
+// Initialize router, stores and notification
+const router = useRouter();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
 
-  data() {
-    return {
-      stripeKey: Config.STRIPE_KEY,
-      khaltiConfig: {
-        productIdentity: '0000',
-        productName: 'Veniqa',
-        key: Config.KHALTI_KEY,
-      },
-    };
-  },
+// Reactive data
+const stripeKey = ref(Config.STRIPE_KEY);
+const khaltiConfig = ref({
+  productIdentity: '0000',
+  productName: 'Veniqa',
+  key: Config.KHALTI_KEY,
+});
 
-  created() {
-    this.khaltiConfig.productIdentity = this.checkoutId;
-  },
+// Computed properties
+const checkoutId = computed(() => cartStore.checkoutId);
+const totalPrice = computed(() => {
+  const cost = cartStore.getTotal;
+  if (cost == null) return 0;
+  return parseInt(cost.amount * 100);
+});
 
-  methods: {
-    async startPayment(token) {
-      if (!this.checkoutId || this.checkoutId.length <= 0) return;
-      try {
-        const data = await paymentService.payWithStripe(token, this.checkoutId);
+const shippingMethod = computed({
+  get: () => shippingStore.shippingMethod,
+  set: (val) => shippingStore.setShippingMethod(val)
+});
 
-        this.$store.commit('cartStore/resetOrders');
-        this.$router.push(`/orders/${data.order_id}`);
-        notification.success(this, 'Payment was successful.');
-        console.log('payWithStripe token', token);
-      } catch (error) {
-        console.log('Error with Veniqa payment', error);
-        notification.error(
-          this,
-          'Payment could not be completed at the moment',
-        );
-      }
-    },
+// Initialize data on component creation
+onMounted(() => {
+  khaltiConfig.value.productIdentity = checkoutId.value;
+});
 
-    async startKhaltiPayment(payload) {
-      if (!this.checkoutId || this.checkoutId.length <= 0) return;
+// Methods
+async function startPayment(token) {
+  if (!checkoutId.value || checkoutId.value.length <= 0) return;
+  try {
+    const data = await paymentService.payWithStripe(token, checkoutId.value);
 
-      try {
-        const data = await paymentService.payWithKhalti(
-          payload.token,
-          this.checkoutId,
-        );
+    cartStore.resetOrders();
+    router.push(`/orders/${data.order_id}`);
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'Payment was successful.'
+    });
+    console.log('payWithStripe token', token);
+  } catch (error) {
+    console.log('Error with Veniqa payment', error);
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Payment could not be completed at the moment'
+    });
+  }
+}
 
-        this.$store.commit('cartStore/resetOrders');
-        this.$router.push(`/orders/${data.order_id}`);
-        notification.success(this, 'Payment was successful.');
-      } catch (error) {
-        console.log('Error with Veniqa payment', error);
-        notification.error(
-          this,
-          'Payment could not be completed at the moment',
-        );
-      }
-    },
+async function startKhaltiPayment(payload) {
+  if (!checkoutId.value || checkoutId.value.length <= 0) return;
 
-    async handlePayment() {
-      try {
-        await this.$store.dispatch('cartStore/pay');
-        notification.success(this, 'Payment processed');
-        this.shippingMethod = null;
-      } catch (error) {
-        console.log(error);
-        const msg = error.httpStatus ? '' : error.response.data.errorDetails;
-        notification.error(this, `Error: ${msg}`, 'all');
-      }
-    },
-  },
+  try {
+    const data = await paymentService.payWithKhalti(
+      payload.token,
+      checkoutId.value,
+    );
 
-  computed: {
-    ...mapGetters({
-      checkoutId: 'cartStore/checkoutId',
-    }),
+    cartStore.resetOrders();
+    router.push(`/orders/${data.order_id}`);
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'Payment was successful.'
+    });
+  } catch (error) {
+    console.log('Error with Veniqa payment', error);
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Payment could not be completed at the moment'
+    });
+  }
+}
 
-    totalPrice() {
-      const cost = this.$store.getters['cartStore/getTotal'];
-      if (cost == null) return 0;
-      return parseInt(cost.amount * 100);
-    },
-
-    shippingMethod: {
-      get() {
-        return this.$store.getters['shippingStore/shippingMethod'];
-      },
-      set(val) {
-        this.$store.commit('shippingStore/setShippingMethod', val);
-      },
-    },
-  },
-};
+async function handlePayment() {
+  try {
+    await cartStore.pay();
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'Payment processed'
+    });
+    shippingMethod.value = null;
+  } catch (error) {
+    console.log(error);
+    const msg = error.httpStatus ? '' : error.response.data.errorDetails;
+    notify({
+      group: 'all',
+      type: 'error',
+      text: `Error: ${msg}`
+    });
+  }
+}
 </script>
 
 <style lang="scss">

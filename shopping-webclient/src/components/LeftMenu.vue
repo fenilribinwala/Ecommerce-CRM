@@ -1,6 +1,6 @@
 <template>
   <div id="left-menu" class="align-left">
-    <p href="javascript:void(0)" class="closebtn pointer" @click="$emit('close')">×</p>
+    <p href="javascript:void(0)" class="closebtn pointer" @click="emit('close')">×</p>
     <div class="content">
       <ul class="category-list">
         <li @click="openCatalogPage('Women')">Women</li>
@@ -20,66 +20,74 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
+import { useNotification } from '@kyvg/vue3-notification';
 
-export default {
-  name: 'LeftMenuComponent',
+// Define emits
+const emit = defineEmits(['close']);
 
-  methods: {
-    openCatalogPage(cat) {
-      // this.$router.push(`/catalogs/${searchTerm}`);
-      this.$router.push({
-        path: '/search',
-        query: {
-          category: cat,
-        },
-      });
-      this.$emit('close');
+// Initialize router, stores and notification
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
+
+// Computed properties
+const isSessionActive = computed(() => authStore.isSessionActive);
+
+// Methods
+function openCatalogPage(cat) {
+  router.push({
+    path: '/search',
+    query: {
+      category: cat,
     },
+  });
+  emit('close');
+}
 
-    gotoOrders() {
-      this.$router.push('/orders');
-      this.$emit('close');
-    },
+function gotoOrders() {
+  router.push('/orders');
+  emit('close');
+}
 
-    loginClicked() {
-      this.$router.push('/login');
-      this.$emit('close');
-    },
+function loginClicked() {
+  router.push('/login');
+  emit('close');
+}
 
-    async logoutClicked() {
-      try {
-        await this.$store.dispatch('authStore/logout');
-        this.$notify({
-          group: 'all',
-          type: 'success',
-          text: 'You have been successfully logged out.',
-        });
-        this.$store.commit('cartStore/resetOrders');
-        this.$store.commit('shippingStore/resetAddresses');
-        this.$router.push('/');
-      } catch (err) {
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text: 'Sorry but we could not log you out at the moment.',
-        });
-      }
+async function logoutClicked() {
+  try {
+    await authStore.logout();
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'You have been successfully logged out.',
+    });
+    cartStore.resetOrders();
+    shippingStore.resetAddresses();
+    router.push('/');
+  } catch (err) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Sorry but we could not log you out at the moment.',
+    });
+  }
 
-      this.$emit('close');
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-    }),
-  },
-};
+  emit('close');
+}
 </script>
 
 <style lang="scss">
+@use "sass:color";
+
 #left-menu {
   .content {
     font-size: 1.2rem;
@@ -111,7 +119,7 @@ export default {
       height: 20vh;
       margin-bottom: 0;
       padding-top: 1rem;
-      background-color: darken($color: whitesmoke, $amount: 5);
+      background-color: color.scale(whitesmoke, $lightness: -5%);
 
       p {
         cursor: pointer;

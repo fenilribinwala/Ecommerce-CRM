@@ -59,109 +59,96 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
+import { useNotification } from '@kyvg/vue3-notification';
 import ShippingDetail from '@/components/checkout/ShippingDetail.vue';
 import OrderDetail from '@/components/checkout/OrderDetail.vue';
 import PaymentDetail from '@/components/checkout/PaymentDetail.vue';
-import ProxyUrls from '@/constants/ProxyUrls';
 import ShippingMethod from '@/components/checkout/ShippingMethod.vue';
-import { mapGetters } from 'vuex';
-import notification from '@/services/notificationService';
+import ProxyUrls from '@/constants/ProxyUrls';
 
-export default {
-  name: 'Checkout',
-  components: {
-    ShippingDetail,
-    OrderDetail,
-    PaymentDetail,
-    ShippingMethod,
-  },
+// Initialize router, stores and notification
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
 
-  data() {
-    return {
-      // selectedAddress: {},
-      payment: {},
-    };
-  },
+// Reactive data
+const payment = ref({});
 
-  created() {
-    // if(!this.isSessionActive || this.carts.length <= 0){
-    //   this.$router.push('/');
-    // }
-  },
+// Computed properties
+const selectedAddress = computed(() => shippingStore.getSelectedAddress);
+const carts = computed(() => cartStore.cart);
+const isSessionActive = computed(() => authStore.isSessionActive);
+const checkoutInitiated = computed(() => cartStore.checkoutInitiated);
+const emailConfirmed = computed(() => authStore.emailConfirmed);
+const shippingMethod = computed({
+  get: () => shippingStore.shippingMethod,
+  set: (val) => shippingStore.setShippingMethod(val)
+});
 
-  methods: {
+// Methods
+async function addressSelected(selected) {
+  shippingStore.addressSelected(selected);
+  if (!checkoutInitiated.value) return;
+  try {
+    await cartStore.createCheckout({
+      address: selectedAddress.value,
+      shippingMethod: shippingMethod.value,
+    });
+  } catch (error) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Something went haywire while trying to recalculate the prices. Please try again by changing address.'
+    });
+  }
+}
 
-    async addressSelected(selected) {
-      this.$store.commit('shippingStore/addressSelected', selected);
-      if (!this.checkoutInitiated) return;
-      try {
-        await this.$store.dispatch('cartStore/createCheckout', {
-          address: this.selectedAddress,
-          shippingMethod: this.shippingMethod,
-        });
-      } catch (error) {
-        notification.error(
-          this,
-          'Something went haywire while trying to recalculate the prices. Please try again by changing address.',
-        );
-      }
-    },
+async function handleCheckout() {
+  if (!selectedAddress.value || !shippingMethod.value) {
+    notify({
+      group: 'all',
+      type: 'warn',
+      text: 'The shipping method and address should be selected first.'
+    });
+    return;
+  }
+  await cartStore.createCheckout({
+    address: selectedAddress.value,
+    shippingMethod: shippingMethod.value,
+  });
+}
 
-    async handleCheckout() {
-      if (!this.selectedAddress || !this.shippingMethod) {
-        notification.warn(this, 'The shipping method and address should be selected first.');
-        return;
-      }
-      await this.$store.dispatch('cartStore/createCheckout', {
-        address: this.selectedAddress,
-        shippingMethod: this.shippingMethod,
+async function resendEmailConfirmation() {
+  try {
+    const { data } = await axios({
+      method: 'get',
+      url: ProxyUrls.resendEmailConfirmation + authStore.getEmail,
+    });
+
+    if (data && data.httpStatus === 200) {
+      notify({
+        group: 'all',
+        type: 'success',
+        text: 'Confirmation email has been sent to your email address. Please check your email.'
       });
-    },
-
-    async resendEmailConfirmation() {
-      try {
-        const { data } = await this.$axios({
-          method: 'get',
-          url: ProxyUrls.resendEmailConfirmation + this.$store.getters['authStore/getEmail'],
-        });
-
-        if (data && data.httpStatus === 200) {
-          this.$notify({
-            group: 'all',
-            type: 'success',
-            text: 'Confirmation email has been sent to your email address. Please check your email.',
-          });
-        }
-      } catch (err) {
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text: 'There was an error sending out the email. Please try again later',
-        });
-      }
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      selectedAddress: 'shippingStore/getSelectedAddress',
-      carts: 'cartStore/getCart',
-      isSessionActive: 'authStore/isSessionActive',
-      checkoutInitiated: 'cartStore/checkoutInitiated',
-      emailConfirmed: 'authStore/emailConfirmed',
-    }),
-
-    shippingMethod: {
-      get() {
-        return this.$store.getters['shippingStore/shippingMethod'];
-      },
-      set(val) {
-        this.$store.commit('shippingStore/setShippingMethod', val);
-      },
-    },
-  },
-};
+    }
+  } catch (err) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'There was an error sending out the email. Please try again later'
+    });
+  }
+}
 </script>
 
 <style lang="scss">

@@ -1,59 +1,80 @@
 /* eslint-disable */
-import Vue from 'vue';
-import '@/assets/css/colors.scss';
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-
-import BootstrapVue from 'bootstrap-vue';
-import store from './store/store';
-import router from './routers/router';
-import App from './App.vue';
-
-import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-// eslint-disable-next-line
-import VueAxios from './plugins/axios';
-
-import '@/assets/css/global.scss';
-import '@/assets/css/overrides.scss';
-import '@/assets/css/sidebar.scss';
-
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import Notifications from '@kyvg/vue3-notification';
 import VueScrollTo from 'vue-scrollto';
-import Notifications from 'vue-notification';
-import _ from 'lodash';
-import { PulseLoader } from 'vue-loading-spinner';
+import { LoadingPlugin } from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css';
+import BootstrapVue3 from 'bootstrap-vue-3';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
+import axios from 'axios';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { 
+  faShoppingCart, 
+  faSignInAlt, 
+  faUserPlus, 
+  faSignOutAlt, 
+  faUser, 
+  faChevronDown, 
+  faChevronUp, 
+  faPlus, 
+  faMinus,
+  faTimes,
+  faTrash
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { VueReCaptcha } from 'vue-recaptcha-v3';
+import App from './App.vue';
+import router from './routers/router';
+import { eventBus } from './utils/EventHub';
+import Config from '@/config.json';
 
-import 'animate.css';
-import './assets/css/hover.css';
+// Setup FontAwesome icons
+library.add(
+  faShoppingCart, 
+  faSignInAlt, 
+  faUserPlus, 
+  faSignOutAlt, 
+  faUser, 
+  faChevronDown, 
+  faChevronUp, 
+  faPlus, 
+  faMinus,
+  faTimes,
+  faTrash
+);
 
-Vue.use(Notifications);
-Vue.component('pulse-loader', PulseLoader);
+// Configure axios defaults
+axios.defaults.baseURL = process.env.VUE_APP_API_URL;
+axios.defaults.headers.post['Content-Type'] = 'application/json';
 
-// You can also pass in the default options
-Vue.use(VueScrollTo, {
-  container: 'body',
-  duration: 500,
-  easing: 'ease-in-out',
-  offset: 0,
-  force: true,
-  cancelable: true,
-  onStart: false,
-  onDone: false,
-  onCancel: false,
-  x: false,
-  y: true
+// Create Pinia store
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
+
+// Create Vue app instance
+const app = createApp(App);
+
+// Register components and plugins
+app.component('font-awesome-icon', FontAwesomeIcon);
+app.use(BootstrapVue3);
+app.use(router);
+app.use(pinia);
+app.use(Notifications);
+app.use(VueScrollTo);
+app.use(LoadingPlugin);
+app.use(VueReCaptcha, {
+  siteKey: Config.RECAPTCHA,
+  loaderOptions: {
+    useRecaptchaNet: true,
+    autoHideBadge: false
+  }
 });
 
-library.add(fas);
+// Provide the event bus to the entire app
+app.provide('eventBus', eventBus);
 
-Vue.component('font-awesome-icon', FontAwesomeIcon);
-Vue.use(BootstrapVue);
-
-Vue.config.productionTip = false;
-
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app');
+// Mount the app
+app.mount('#app');

@@ -127,98 +127,106 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
 import LeftMenuView from '@/components/LeftMenu.vue';
+import { useNotification } from '@kyvg/vue3-notification';
 
-export default {
-  name: 'HeaderMenu',
-  components: {
-    LeftMenuView,
+// Define props
+const props = defineProps({
+  rightSidebarVisible: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
-  props: {
-    rightSidebarVisible: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
+  sidebarWidth: {
+    type: Number,
+    required: false,
+    default: 300,
+  },
+});
 
-    sidebarWidth: {
-      type: Number,
-      required: false,
-      default: 300,
-    },
-  },
-  data() {
-    return {
-      scrollPos: null,
-      showSearch: false,
-      searchTerm: '',
-    };
-  },
-  methods: {
-    burgerClick() {
-      this.$emit('activateSidebar');
-    },
-    openCategory(cat) {
-      this.$router.push({
-        path: '/search',
-        query: {
-          category: cat,
-        },
-      });
-    },
-    searchProduct() {
-      // this.$store.commit('searchStore/setSearchTerm', this.searchTerm);
-      this.$router.push({
-        path: '/search',
-        query: {
-          term: this.searchTerm,
-        },
-      });
-    },
-    async logoutClicked() {
-      try {
-        await this.$store.dispatch('authStore/logout');
-        this.$notify({
-          group: 'all',
-          type: 'success',
-          text: 'You have been successfully logged out.',
-        });
-        this.$store.commit('cartStore/resetOrders');
-        this.$store.commit('shippingStore/resetAddresses');
-        this.$router.push('/');
-      } catch (err) {
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text: 'Sorry but we could not log you out at the moment.',
-        });
-      }
-    },
-  },
+// Define emits
+const emit = defineEmits(['openCart', 'activateSidebar']);
 
-  computed: {
-    nameOfUser() {
-      return this.$store.getters['authStore/getFirstName'];
-    },
-    totalOrders() {
-      return this.$store.getters['cartStore/getTotalItems'];
-    },
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-    }),
+// Initialize stores
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
 
-    headerStyle() {
-      return {
-        'margin-right': this.rightSidebarVisible
-          ? `${this.sidebarWidth}px`
-          : '0px',
-        // 'min-width': '100%'
-      };
+// Reactive data
+const showSearch = ref(false);
+const searchTerm = ref('');
+
+// Computed properties
+const nameOfUser = computed(() => {
+  return authStore.getUser?.firstName || 'User';
+});
+
+const totalOrders = computed(() => {
+  return cartStore.getTotalItems || 0;
+});
+
+const isSessionActive = computed(() => {
+  return authStore.isSessionActive;
+});
+
+const headerStyle = computed(() => {
+  return {
+    'margin-right': props.rightSidebarVisible
+      ? `${props.sidebarWidth}px`
+      : '0px',
+  };
+});
+
+// Methods
+function burgerClick() {
+  emit('activateSidebar');
+}
+
+function openCategory(cat) {
+  router.push({
+    path: '/search',
+    query: {
+      category: cat,
     },
-  },
-};
+  });
+}
+
+function searchProduct() {
+  router.push({
+    path: '/search',
+    query: {
+      term: searchTerm.value,
+    },
+  });
+}
+
+async function logoutClicked() {
+  try {
+    await authStore.logout();
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'You have been successfully logged out.',
+    });
+    cartStore.resetOrders();
+    shippingStore.resetAddresses();
+    router.push('/');
+  } catch (err) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Sorry but we could not log you out at the moment.',
+    });
+  }
+}
 </script>
 
 <style lang="scss">

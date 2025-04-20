@@ -13,105 +13,95 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { ref, computed, onMounted, watch, reactive } from 'vue';
+import { useRoute } from 'vue-router';
+import { useCategoryStore } from '@/stores/categoryStore';
+import { useSearchStore } from '@/stores/searchStore';
 import SearchResultView from '@/components/vendor-pages/SearchResultView.vue';
 import PagingOption from '@/dto/Pagination.json';
+import _ from 'lodash';
 
-export default {
-  name: 'SearchView',
-  components: {
-    SearchResultView,
-  },
-  data() {
-    return {
-      term: '',
-      category: '',
-      subCategory: '',
-      paging: _.cloneDeep(PagingOption),
-    };
-  },
+// Initialize route and stores
+const route = useRoute();
+const categoryStore = useCategoryStore();
+const searchStore = useSearchStore();
 
-  watch: {
-    // eslint-disable-next-line
-    '$route.query': function (value) {
-      this.assignQueryValues(value);
-    },
-  },
+// Reactive data
+const term = ref('');
+const category = ref('');
+const subCategory = ref('');
+const paging = reactive(_.cloneDeep(PagingOption));
 
-  async created() {
-    await this.$store.dispatch('categoryStore/getCategoriesData');
+// Computed properties
+const categories = computed(() => categoryStore.categories);
+const masterCategoryList = computed(() => categoryStore.masterList);
+const searchResult = computed(() => searchStore.searchResult);
 
-    this.assignQueryValues(this.$route.query);
-  },
+// Watch for route query changes
+watch(() => route.query, (value) => {
+  assignQueryValues(value);
+});
 
-  methods: {
-    assignQueryValues(value) {
-      if (value.category) this.category = value.category;
-      else this.category = '';
+// Initialize component
+onMounted(async () => {
+  await categoryStore.getCategoriesData();
+  assignQueryValues(route.query);
+});
 
-      if (value.subCategory) this.subCategory = value.subCategory;
-      else this.subCategory = '';
+// Methods
+function assignQueryValues(value) {
+  if (value.category) category.value = value.category;
+  else category.value = '';
 
-      if (value.term) this.term = value.term;
-      else this.term = '';
+  if (value.subCategory) subCategory.value = value.subCategory;
+  else subCategory.value = '';
 
-      this.$store.commit('searchStore/resetStore');
-      this.paging.page = 1;
+  if (value.term) term.value = value.term;
+  else term.value = '';
 
-      this.performSearch();
-    },
+  searchStore.resetStore();
+  paging.page = 1;
 
-    async performSearch() {
-      const payload = {};
+  performSearch();
+}
 
-      payload.term = this.term;
+async function performSearch() {
+  const payload = {};
 
-      if (this.category.length > 0 && this.subCategory.length > 0) {
-        payload.subcategories = _.map(
-          _.filter(
-            this.masterCategoryList,
-            v => v.subcategory === this.subCategory && v.category === this.category,
-          ),
-          '_id',
-        );
-      } else if (this.subCategory.length > 0) {
-        payload.subcategories = _.map(
-          _.filter(
-            this.masterCategoryList,
-            v => v.subcategory === this.subCategory,
-          ),
-          '_id',
-        );
-      } else if (this.category.length > 0) {
-        payload.subcategories = _.map(this.categories[this.category], '_id');
-      }
+  payload.term = term.value;
 
-      payload.paging = this.paging;
+  if (category.value.length > 0 && subCategory.value.length > 0) {
+    payload.subcategories = _.map(
+      _.filter(
+        masterCategoryList.value,
+        v => v.subcategory === subCategory.value && v.category === category.value,
+      ),
+      '_id',
+    );
+  } else if (subCategory.value.length > 0) {
+    payload.subcategories = _.map(
+      _.filter(
+        masterCategoryList.value,
+        v => v.subcategory === subCategory.value,
+      ),
+      '_id',
+    );
+  } else if (category.value.length > 0) {
+    payload.subcategories = _.map(categories.value[category.value], '_id');
+  }
 
-      const pageResp = await this.$store.dispatch(
-        'searchStore/searchForProduct',
-        payload,
-      );
+  payload.paging = paging;
 
-      _.assign(this.paging, pageResp);
-    },
+  const pageResp = await searchStore.searchForProduct(payload);
 
-    loadMoreData() {
-      this.paging.page += parseInt(1);
+  _.assign(paging, pageResp);
+}
 
-      this.performSearch();
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      categories: 'categoryStore/categories',
-      masterCategoryList: 'categoryStore/masterList',
-      searchResult: 'searchStore/searchResult',
-    }),
-  },
-};
+function loadMoreData() {
+  paging.page += parseInt(1);
+  performSearch();
+}
 </script>
 
 <style lang="scss">

@@ -6,40 +6,44 @@
     "node": ">=22.14.0"
   },
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
     "build": "vue-cli-service build",
     "dev-build": "vue-cli-service build --mode dev",
-    "lint": "vue-cli-service lint --fix",
-    "postinstall": "npm rebuild node-sass"
+    "lint": "vue-cli-service lint --fix"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.3.0",
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
-    "@fortawesome/vue-fontawesome": "^2.0.10",
+    "@fortawesome/vue-fontawesome": "^3.0.5",
+    "@kyvg/vue3-notification": "^2.9.1",
+    "@popperjs/core": "^2.11.8",
+    "@unhead/vue": "^1.8.10",
     "animate.css": "^4.1.1",
     "axios": "^1.6.2",
-    "bootstrap": "^4.6.2",
-    "bootstrap-vue": "^2.23.1",
-    "vue-loading-spinner": "^1.0.11",
+    "bootstrap": "^5.3.2",
+    "bootstrap-vue-3": "^0.5.1",
     "khalti-web": "^1.1.1",
     "lodash": "^4.17.21",
+    "mitt": "^3.0.1",
     "moment": "^2.29.4",
-    "vue": "^2.7.15",
-    "vue-analytics": "^5.22.1",
-    "vue-notification": "^1.3.20",
-    "vue-recaptcha": "^2.0.3",
-    "vue-router": "^3.6.5",
-    "vue-scrollto": "^2.20.0",
-    "vuex": "^3.6.2",
-    "vuex-persist": "^3.1.3"
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.1",
+    "vue": "^3.4.15",
+    "vue-loading-overlay": "^6.0.3",
+    "vue-recaptcha-v3": "^2.0.1",
+    "vue-router": "^4.2.5",
+    "vue-scrollto": "^2.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
-    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/eslint-parser": "^7.23.10",
     "@babel/plugin-transform-runtime": "^7.24.0",
-    "@vue/cli-plugin-babel": "^5.0.8",
-    "@vue/cli-plugin-eslint": "^5.0.8",
-    "@vue/cli-service": "^5.0.8",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
+    "@vue/compiler-sfc": "^3.4.15",
     "@vue/eslint-config-airbnb": "^7.0.0",
     "babel-eslint": "^10.1.0",
     "eslint": "^8.54.0",
@@ -48,9 +52,6 @@
     "eslint-plugin-vue": "^9.18.1",
     "sass": "^1.69.5",
     "sass-loader": "^13.3.2",
-    "vue-template-compiler": "^2.7.15"
-  },
-  "overrides": {
-    "node-sass": "npm:sass@^1.69.5"
+    "typescript": "^5.3.3"
   }
 }

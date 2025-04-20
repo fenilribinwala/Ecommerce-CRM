@@ -1,4 +1,7 @@
-/* eslint-disable import/prefer-default-export */
-import Vue from 'vue';
+import mitt from 'mitt';
 
-export const eventHub = new Vue();
+// Create a new event emitter instance
+export const eventBus = mitt();
+
+// Export default for backward compatibility
+export default eventBus;

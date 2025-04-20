@@ -72,106 +72,107 @@
           size="sm"
           class="primary-button"
           style="margin-top: 0.2rem;"
-          @click="$router.push('/login')"
+          @click="router.push('/login')"
         >Login</b-btn>
       </div>
     </b-popover>
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { ref, computed, onMounted, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useNotification } from '@kyvg/vue3-notification';
+import _ from 'lodash';
 
-export default {
-  name: 'ProductDescription',
-  props: {
-    data: {
-      type: Object,
-      required: true,
-    },
+// Define props
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true,
   },
-  data() {
-    return {
-      product: null,
-      selectedCustomizations: {},
-      showLoginPopover: false,
-    };
-  },
+});
 
-  created() {
-    this.product = this.data;
+// Initialize router, stores and notification
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const { notify } = useNotification();
 
-    // Selected Customization is just used for the simplicity. The values are also changed in this.product.
-    this.selectedCustomizations = _.cloneDeep(this.product.customValues);
-  },
+// Reactive data
+const product = ref(null);
+const selectedCustomizations = reactive({});
+const showLoginPopover = ref(false);
+const popover = ref(null);
 
-  methods: {
-    async addToCart() {
-      if (!this.isSessionActive) {
-        this.$refs.popover.$emit('enable');
-        this.showLoginPopover = true;
-        return;
-      }
+// Computed properties
+const isSessionActive = computed(() => authStore.isSessionActive);
+const customizations = computed(() => product.value.customizationOptions.customizations);
 
-      // Disable the popover in case the add to cart is possible
-      this.$refs.popover.$emit('disable');
+// Initialize component
+onMounted(() => {
+  product.value = props.data;
+  Object.assign(selectedCustomizations, _.cloneDeep(product.value.customValues));
+});
 
-      this.product.customValues = {};
-      Object.keys(this.selectedCustomizations).forEach((key) => {
-        if (typeof this.selectedCustomizations[key] === 'string') {
-          this.product.customValues[key] = this.selectedCustomizations[key];
-        } else {
-          this.product.customValues[key] = `${
-            this.selectedCustomizations[key].name
-          }|${this.selectedCustomizations[key].hexValue}`;
-        }
-      });
-      const val = await this.$store.dispatch('cartStore/addToTheCart', [
-        this.product,
-      ]);
-      if (val) {
-        this.$notify({
-          group: 'toast',
-          type: 'success',
-          text: `Added ${this.product.name} to the cart`,
-          title: 'Added to Cart<font-awesome-icon icon="cart"/>',
-        });
-      } else {
-        this.$notify({
-          group: 'toast',
-          type: 'warn',
-          text: `${
-            this.product.name
-          } couldn't be added for some reason. Please try again later`,
-        });
-      }
-    },
+// Methods
+async function addToCart() {
+  if (!isSessionActive.value) {
+    popover.value.$emit('enable');
+    showLoginPopover.value = true;
+    return;
+  }
 
-    colorClicked(key, colorObj) {
-      this.selectedCustomizations[key] = colorObj;
-    },
+  // Disable the popover in case the add to cart is possible
+  popover.value.$emit('disable');
 
-    increaseCount() {
-      this.product.counts += 1;
-    },
+  product.value.customValues = {};
+  Object.keys(selectedCustomizations).forEach((key) => {
+    if (typeof selectedCustomizations[key] === 'string') {
+      product.value.customValues[key] = selectedCustomizations[key];
+    } else {
+      product.value.customValues[key] = `${
+        selectedCustomizations[key].name
+      }|${selectedCustomizations[key].hexValue}`;
+    }
+  });
+  
+  const val = await cartStore.addToTheCart([product.value]);
+  
+  if (val) {
+    notify({
+      group: 'toast',
+      type: 'success',
+      text: `Added ${product.value.name} to the cart`,
+      title: 'Added to Cart<font-awesome-icon icon="cart"/>',
+    });
+  } else {
+    notify({
+      group: 'toast',
+      type: 'warn',
+      text: `${
+        product.value.name
+      } couldn't be added for some reason. Please try again later`,
+    });
+  }
+}
 
-    decreaseCount() {
-      this.product.counts -= 1;
-      if (this.product.counts < 0) {
-        this.product.counts = 0;
-      }
-    },
-  },
+function colorClicked(key, colorObj) {
+  selectedCustomizations[key] = colorObj;
+}
 
-  computed: {
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-    }),
-    customizations() {
-      return this.product.customizationOptions.customizations;
-    },
-  },
-};
+function increaseCount() {
+  product.value.counts += 1;
+}
+
+function decreaseCount() {
+  product.value.counts -= 1;
+  if (product.value.counts < 0) {
+    product.value.counts = 0;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -200,39 +201,39 @@ export default {
       display: inline-block;
       height: 30px;
       width: 30px;
-      margin-right: 10px;
+      margin-right: 5px;
+      border-radius: 5px;
+      border: 1px solid #dbdbdb;
 
       &:hover {
         cursor: pointer;
       }
 
-      .selected {
-        border: 2px solid black;
+      &.selected {
+        border: 3px solid black;
       }
     }
   }
 
-  .custom-attributes {
-    margin-top: 1rem;
+  h5 {
+    margin-bottom: 10px;
   }
-  .section-title {
-    font-size: 1.2em;
-  }
+
   .add-to-cart {
-    background-color: white; /*this for transparent button*/
-    border: 2px solid black; /* this is for button border*/
-    border-radius: 0px;
-    color: black;
-    padding: 10px 40px;
+    padding: 5px 8px;
+    background-image: linear-gradient(to right, #267871, #136a8a) !important;
   }
-  .add-to-cart:hover {
-    background-color: black; /*this for transparent button*/
-    border: 2px solid black; /* this is for button border*/
-    border-radius: 0px;
-    color: white;
+
+  .selector {
+    color: gray;
+    font-size: 14px;
+    text-transform: uppercase;
   }
-  h3 {
-    color: black;
+
+  .icon-counter {
+    display: inline-block;
+    min-width: 50px;
+    text-align: center;
   }
 }
 </style>

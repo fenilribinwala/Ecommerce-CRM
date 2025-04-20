@@ -5,7 +5,7 @@
     <h2>Your orders</h2>
 
     <b-tabs>
-      <template slot="tabs">
+      <template #tabs>
         <b-nav-item
           v-for="(item, ind) in tabs"
           v-bind:key="ind"
@@ -27,71 +27,62 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useOrderStore } from '@/stores/orderStore';
 import SingleOrder from '@/components/orders/SingleOrder.vue';
+import _ from 'lodash';
 
-export default {
-  name: 'OrderView',
-  components: {
-    SingleOrder,
+// Initialize store
+const orderStore = useOrderStore();
+
+// Reactive data
+const activeTab = ref('all');
+const tabs = ref([
+  {
+    name: 'Orders',
+    key: 'all',
   },
-  data() {
-    return {
-      tabs: [
-        {
-          name: 'Orders',
-          key: 'all',
-        },
-        {
-          name: 'Open Orders',
-          key: 'open',
-        },
-        {
-          name: 'Completed',
-          key: 'completed',
-        },
-        {
-          name: 'Cancelled',
-          key: 'cancelled',
-        },
-      ],
-
-      activeTab: 'all',
-    };
+  {
+    name: 'Open Orders',
+    key: 'open',
   },
-
-  async created() {
-    // Look for all the items from the order list.
-    await this.$store.dispatch('orderStore/getOrderList', '');
+  {
+    name: 'Completed',
+    key: 'completed',
   },
-
-  methods: {
-    tabSelected(key) {
-      this.activeTab = key;
-    },
+  {
+    name: 'Cancelled',
+    key: 'cancelled',
   },
+]);
 
-  computed: {
-    ...mapGetters({
-      orders: 'orderStore/orders',
-    }),
+// Computed properties
+const orders = computed(() => orderStore.orders);
+const filteredOrders = computed(() => {
+  if (activeTab.value === 'open') {
+    return _.filter(orders.value, i => i.overall_status !== 'COMPLETED' && i.overall_status !== 'CANCELLED');
+  }
+  if (activeTab.value === 'completed') {
+    return _.filter(orders.value, i => i.overall_status === 'COMPLETED');
+  }
+  if (activeTab.value === 'cancelled') {
+    return _.filter(orders.value, i => i.overall_status === 'CANCELLED');
+  }
 
-    filteredOrders() {
-      if (this.activeTab === 'open') {
-        return _.filter(this.orders, i => i.overall_status !== 'COMPLETED' && i.overall_status !== 'CANCELLED');
-      }
-      if (this.activeTab === 'completed') {
-        return _.filter(this.orders, i => i.overall_status === 'COMPLETED');
-      }
-      if (this.activeTab === 'cancelled') {
-        return _.filter(this.orders, i => i.overall_status === 'CANCELLED');
-      }
+  return orders.value;
+});
 
-      return this.orders;
-    },
-  },
-};
+// Methods
+function tabSelected(key) {
+  activeTab.value = key;
+}
+
+// Initialize component
+onMounted(async () => {
+  // Look for all the items from the order list.
+  await orderStore.getOrderList('');
+});
 </script>
 
 <style lang="scss">

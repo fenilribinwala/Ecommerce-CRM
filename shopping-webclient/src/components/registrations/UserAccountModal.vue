@@ -6,7 +6,7 @@
           <div class="account-body">
             <div class="account-content image">
               <img
-                @click="$router.push('/')"
+                @click="router.push('/')"
                 src="./../../assets/transparent-logo.png"
                 alt="Logo"
                 width="200px"
@@ -46,145 +46,162 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useLoaderStore } from '@/stores/loaderStore';
+import { useNotification } from '@kyvg/vue3-notification';
 import LoginComponent from '@/components/registrations/LoginComponent.vue';
 import RegisterComponent from '@/components/registrations/RegisterComponent.vue';
 import moment from 'moment';
+import _ from 'lodash';
 
-export default {
-  name: 'UserAccountModal',
-  components: {
-    LoginComponent,
-    RegisterComponent,
-  },
-  data() {
-    return {
-      showLogin: true,
-      activePanel: 'login',
-      showFailure: false,
-    };
-  },
+// Define emits
+const emit = defineEmits(['loginSuccess']);
 
-  methods: {
-    closeModal() {
-      this.$emit('loginSuccess');
-    },
-    async login(userInfo) {
-      try {
-        this.$store.commit('loaderStore/setLoader');
-        const data = await this.$store.dispatch('authStore/login', userInfo);
-        if (data.cart && data.cart.items.length > 0) {
-          const incomingProductIds = _.map(data.cart, 'product_id');
-          // Update the cart values.
-          const currentCartItems = this.$store.getters['cartStore/getCart'];
+// Initialize router and stores
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const loaderStore = useLoaderStore();
+const { notify } = useNotification();
 
-          const toAdd = [];
-          currentCartItems.forEach((item) => {
-            if (incomingProductIds.indexOf(item.product_id) < 0) {
-              // Adding the product ID and the counts.
-              toAdd.push({
-                _id: item.product_id,
-                counts: item.counts,
-              });
-            }
+// Reactive data
+const showLogin = ref(true);
+const activePanel = ref('login');
+const showFailure = ref(false);
+
+// Methods
+function closeModal() {
+  emit('loginSuccess');
+}
+
+async function login(userInfo) {
+  try {
+    loaderStore.setLoader();
+    const data = await authStore.login(userInfo);
+    
+    if (data.cart && data.cart.items.length > 0) {
+      const incomingProductIds = _.map(data.cart, 'product_id');
+      // Update the cart values.
+      const currentCartItems = cartStore.cart;
+
+      const toAdd = [];
+      currentCartItems.forEach((item) => {
+        if (incomingProductIds.indexOf(item.product_id) < 0) {
+          // Adding the product ID and the counts.
+          toAdd.push({
+            _id: item.product_id,
+            counts: item.counts,
           });
-          if (toAdd.length > 0) {
-            this.$store.dispatch('cartStore/addToTheCart', toAdd);
-          } else {
-            this.$store.dispatch('cartStore/getCart');
-          }
         }
-        this.$emit('loginSuccess');
-        localStorage.setItem('sessionDT', moment().format());
-
-        this.$notify({
-          group: 'all',
-          type: 'success',
-          text: 'Successfully logged in',
-        });
-      } catch (err) {
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text: 'User credentials are not correct. Please try again',
-        });
+      });
+      
+      if (toAdd.length > 0) {
+        await cartStore.addToTheCart(toAdd);
+      } else {
+        await cartStore.fetchCart();
       }
-      this.$store.commit('loaderStore/unsetLoader');
-    },
+    }
+    
+    emit('loginSuccess');
+    localStorage.setItem('sessionDT', moment().format());
 
-    async register(userInfo) {
-      try {
-        await this.$store.dispatch(
-          'authStore/registerUser',
-          userInfo,
-        );
+    notify({
+      group: 'all',
+      type: 'success',
+      title: 'Login Succeeded',
+      text: 'You have successfully logged in',
+    });
+  } catch (error) {
+    notify({
+      group: 'all',
+      type: 'error',
+      title: 'Login Failed',
+      text: error.message || 'Something went wrong',
+    });
+  } finally {
+    loaderStore.removeLoader();
+  }
+}
 
-        // this.$emit('loginSuccess');
-        this.$store.commit('loaderStore/unsetLoader');
-        this.navigateToLogin();
-        this.$notify({
-          group: 'all',
-          type: 'success',
-          text:
-            'User successfully created. Please check your inbox to confirm email',
-        });
-      } catch (err) {
-        console.log('Error', err);
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text:
-            'User could not be created at the moment. Please check if you already have an account.',
-        });
-      }
-    },
+async function register(userInfo) {
+  try {
+    loaderStore.setLoader();
+    await authStore.signup(userInfo);
+    
+    notify({
+      group: 'all',
+      type: 'success',
+      title: 'Registration Complete',
+      text: 'Please follow the link sent to your email to confirm your account.',
+    });
+    
+    navigateToLogin();
+  } catch (error) {
+    notify({
+      group: 'all',
+      type: 'error',
+      title: 'Registration Failed',
+      text: error.message || 'Something went wrong',
+    });
+  } finally {
+    loaderStore.removeLoader();
+  }
+}
 
-    navigateToRegister() {
-      this.activePanel = 'registration';
-    },
+function navigateToRegister() {
+  activePanel.value = 'registration';
+}
 
-    navigateToLogin() {
-      this.activePanel = 'login';
-    },
-  },
-};
+function navigateToLogin() {
+  activePanel.value = 'login';
+}
 </script>
 
 <style lang="scss" scoped>
+.account-all {
+  margin: 0;
+  height: 100%;
+  color: black;
+}
+
+.account-cols {
+  padding: 0;
+  height: 100%;
+}
+
 .account-table {
   display: table;
   height: 100%;
   width: 100%;
-
-  .account-body {
-    display: table-row;
-    .account-content {
-      display: table-cell;
-      vertical-align: middle;
-      padding-left: 3rem;
-      padding-right: 1.5rem;
-    }
-
-    .image {
-      height: 100px;
-      width: 100%;
-    }
-  }
 }
 
-.account-all {
-  height: 100vh;
+.account-body {
+  display: table-row;
+  height: 20%;
+}
 
-  .account-cols {
-    padding-left: 0;
-    padding-right: 0;
+.account-content {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  height: 100%;
+
+  &.image {
+    padding: 10px 0;
   }
 }
 
 .advertisement-bg {
-  background-image: url(./../../assets/images/fashion.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
+  background: linear-gradient(to right, #267871, #136a8a);
   height: 100%;
+}
+
+.inside-section {
+  max-width: 500px;
+  margin: auto;
 }
 </style>

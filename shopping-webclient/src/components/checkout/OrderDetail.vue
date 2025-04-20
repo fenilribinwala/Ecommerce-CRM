@@ -19,7 +19,7 @@
                   <span
                     v-for="(custom, cid) of item.customizations"
                     v-bind:key="cid"
-                  >{{custom | customDisplay}} |</span>
+                  >{{customDisplay(custom)}} |</span>
                 </div>
               </div>
               <span class="delete" @click="deleteSelected(item)">Delete</span>
@@ -114,141 +114,133 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
-import notification from '@/services/notificationService';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCartStore } from '@/stores/cartStore';
+import { useNotification } from '@kyvg/vue3-notification';
 
-export default {
-  name: 'OrderDetail',
-  data() {
-    return {
-      countOptions: [],
-    };
-  },
+// Initialize router, store and notification
+const router = useRouter();
+const cartStore = useCartStore();
+const { notify } = useNotification();
 
-  created() {
-    this.countOptions = Array.from(Array(200).keys(), val => val + 1);
-  },
+// Reactive data
+const countOptions = ref([]);
 
-  methods: {
-    orderPicture(img) {
-      return {
-        'background-image': `url(${img})`,
-        width: '100%',
-        height: '70px',
-        'background-size': 'contain',
-        'background-repeat': 'no-repeat',
-      };
-    },
+// Initialize component
+onMounted(() => {
+  countOptions.value = Array.from(Array(200).keys(), val => val + 1);
+});
 
-    gotoDealPage() {
-      this.$router.push('/');
-    },
+// Computed properties
+const orders = computed(() => cartStore.cart);
+const cartTotal = computed(() => cartStore.getTotal);
+const subtotal = computed(() => cartStore.getSubTotal);
+const serviceCharge = computed(() => cartStore.getServiceCharge);
+const shippingPrice = computed(() => cartStore.getShippingPrice);
+const tariffPrice = computed(() => cartStore.getTariffPrice);
+const totalWeight = computed(() => cartStore.getTotalWeight);
 
-    async gotoProduct(pid) {
-      if (!pid) return;
-      // await this.done();
-      this.$router.push(`/products/${pid._id}`);
-    },
+// Methods
+function customDisplay(val) {
+  return val.indexOf('|') >= 0 ? val.split('|')[0] : val;
+}
 
-    async updateCartItem(item) {
-      this.$nextTick(async () => {
-        if (item.counts > 0) {
-          try {
-            await this.$store.dispatch('cartStore/updateOrders', [item]);
-            notification.success(this, 'The cart has been successfully updated.');
-          } catch (err) {
-            console.log('Error', err);
-            notification.error(
-              this,
-              'Cart could not be updated at the moment. Please try again later.',
-            );
-          }
-        }
+function orderPicture(img) {
+  return {
+    'background-image': `url(${img})`,
+    width: '100%',
+    height: '70px',
+    'background-size': 'contain',
+    'background-repeat': 'no-repeat',
+  };
+}
+
+function gotoDealPage() {
+  router.push('/');
+}
+
+async function gotoProduct(pid) {
+  if (!pid) return;
+  router.push(`/products/${pid._id}`);
+}
+
+async function updateCartItem(item) {
+  if (item.counts > 0) {
+    try {
+      await cartStore.updateOrders([item]);
+      notify({
+        group: 'all',
+        type: 'success',
+        text: 'The cart has been successfully updated.'
       });
-    },
+    } catch (err) {
+      console.log('Error', err);
+      notify({
+        group: 'all',
+        type: 'error',
+        text: 'Cart could not be updated at the moment. Please try again later.'
+      });
+    }
+  }
+}
 
-    async deleteSelected(item) {
-      try {
-        await this.$store.dispatch('cartStore/deleteOrders', [item]);
-      } catch (err) {
-        console.log(err);
-      }
-    },
-  },
-
-  filters: {
-    customDisplay(val) {
-      return val.indexOf('|') >= 0 ? val.split('|')[0] : val;
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      orders: 'cartStore/getCart',
-      cartTotal: 'cartStore/getTotal',
-      subtotal: 'cartStore/getSubTotal',
-      serviceCharge: 'cartStore/getServiceCharge',
-      shippingPrice: 'cartStore/getShippingPrice',
-      tariffPrice: 'cartStore/getTariffPrice',
-      totalWeight: 'cartStore/getTotalWeight',
-    }),
-  },
-};
+async function deleteSelected(item) {
+  try {
+    await cartStore.deleteOrders([item]);
+  } catch (err) {
+    console.log(err);
+  }
+}
 </script>
 
 <style lang="scss" scoped>
 @import '../../assets/css/global.scss';
 
-.edit-bag {
-  font-size: 18px;
-  margin-left: 20px;
-  color: #bdbdbd;
+.delete {
   cursor: pointer;
+  color: #7e7e7e;
+  font-size: 12px;
+  text-decoration: underline;
 }
 
+.order-empty {
+  // height: 500px;
+  line-height: 500px;
+  color: #bdbdbd;
+  font-size: 1.5em;
+  text-align: center;
+
+  .content {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+  }
+}
+
+.orders {
+  list-style-type: none;
+  padding: 10px 0px;
+  margin-top: 20px;
+  width: 100%;
+  li {
+    padding: 10px 0px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+    width: 100%;
+  }
+
+  span {
+    padding: 1rem 0px;
+  }
+
+  .order-desc {
+    cursor: pointer;
+  }
+}
 
 .total-line {
-  padding: 10px;
-}
-.order-detail {
-  margin-top: 30px;
-  .order-empty {
-    height: 500px;
-    line-height: 500px;
-    color: #bdbdbd;
-    font-size: 1.5em;
-    text-align: center;
-
-    .content {
-      display: inline-block;
-      vertical-align: middle;
-      line-height: normal;
-    }
-  }
-
-  .orders {
-    list-style-type: none;
-    padding: 0px;
-    width: 100%;
-
-    .order-desc {
-      cursor: pointer;
-    }
-
-    .checkbox-item {
-      padding-top: 20px;
-    }
-
-    li {
-      padding: 10px;
-      margin-bottom: 10px;
-      width: 100%;
-
-      &:nth-child(even) {
-        background: #eeeeee;
-      }
-    }
-  }
+  margin-top: 20px;
 }
 </style>

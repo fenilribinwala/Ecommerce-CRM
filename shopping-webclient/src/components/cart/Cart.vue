@@ -11,7 +11,7 @@
           <b-btn
             class="primary-button"
             v-if="!isSessionActive"
-            @click="$router.push('/login')"
+            @click="router.push('/login')"
           >Login</b-btn>
         </div>
       </div>
@@ -40,7 +40,7 @@
                 <span
                   v-for="(custom, cid) of item.customizations"
                   v-bind:key="cid"
-                >{{custom | customDisplay}} |</span>
+                >{{customDisplay(custom)}} |</span>
               </div>
             </div>
             <div class="delete" @click="deleteSelected(item)" style="margin: 5px 0px">Delete</div>
@@ -76,91 +76,92 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
-import notification from '@/services/notificationService';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useNotification } from '@kyvg/vue3-notification';
 
-export default {
-  name: 'CartView',
-  props: {
-    sidebarWidth: {
-      type: Number,
-      required: false,
-      default: 350,
-    },
+// Define props and emits
+const props = defineProps({
+  sidebarWidth: {
+    type: Number,
+    required: false,
+    default: 350,
   },
+});
 
-  data() {
-    return {
-      countOptions: [],
-    };
-  },
+const emit = defineEmits(['close']);
 
-  created() {
-    this.countOptions = Array.from(Array(200).keys(), val => val + 1);
-  },
+// Initialize router, stores and notification
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const { notify } = useNotification();
 
-  filters: {
-    customDisplay(val) {
-      return val.indexOf('|') >= 0 ? val.split('|')[0] : val;
-    },
-  },
+// Reactive data
+const countOptions = ref([]);
 
-  methods: {
-    gotoCheckout() {
-      if (this.orders && this.orders.length > 0) {
-        this.$router.push('/checkout');
-        this.$emit('close');
-      }
-    },
-    async gotoProduct(pid) {
-      if (!pid) return;
-      // await this.done();
-      this.$router.push(`/products/${pid._id}`);
-    },
+// Init data on component creation
+onMounted(() => {
+  countOptions.value = Array.from(Array(200).keys(), val => val + 1);
+});
 
-    async updateCartItem(item) {
-      this.$nextTick(async () => {
-        if (item.counts > 0) {
-          try {
-            await this.$store.dispatch('cartStore/updateOrders', [
-              item,
-            ]);
-            notification.success(
-              this,
-              'The cart has been successfully updated.',
-            );
-          } catch (err) {
-            console.log('Error', err);
-            notification.error(
-              this,
-              'Cart could not be updated at the moment. Please try again later.',
-            );
-          }
-        }
+// Methods
+function customDisplay(val) {
+  return val.indexOf('|') >= 0 ? val.split('|')[0] : val;
+}
+
+function gotoCheckout() {
+  if (orders.value && orders.value.length > 0) {
+    router.push('/checkout');
+    emit('close');
+  }
+}
+
+async function gotoProduct(pid) {
+  if (!pid) return;
+  router.push(`/products/${pid._id}`);
+}
+
+async function updateCartItem(item) {
+  if (item.counts > 0) {
+    try {
+      await cartStore.updateOrders([item]);
+      notify({
+        group: 'all',
+        type: 'success',
+        text: 'The cart has been successfully updated.'
       });
-    },
+    } catch (err) {
+      console.log('Error', err);
+      notify({
+        group: 'all',
+        type: 'error',
+        text: 'Cart could not be updated at the moment. Please try again later.'
+      });
+    }
+  }
+}
 
-    async deleteSelected(item) {
-      try {
-        await this.$store.dispatch('cartStore/deleteOrders', [item]);
-      } catch (err) {
-        console.log(err);
-      }
-    },
-  },
+async function deleteSelected(item) {
+  try {
+    await cartStore.deleteOrders([item]);
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-  computed: {
-    ...mapGetters({
-      orders: 'cartStore/getCart',
-      subtotal: 'cartStore/getSubTotal',
-      isSessionActive: 'authStore/isSessionActive',
-    }),
-  },
-};
+// Computed properties
+const orders = computed(() => cartStore.cart);
+const subtotal = computed(() => cartStore.getSubTotal);
+const isSessionActive = computed(() => authStore.isSessionActive);
 </script>
 
 <style lang="scss" scoped>
+@use "sass:color";
+
 #cart {
   padding: 0rem 0.5rem;
   h4 {
@@ -179,7 +180,7 @@ export default {
     height: 25vh;
     padding-top: 2rem;
     padding-bottom: 2rem;
-    background-color: darken(white, 5%);
+    background-color: color.scale(white, $lightness: -5%);
   }
 
   .order-empty {
@@ -199,31 +200,34 @@ export default {
 .orders {
   list-style-type: none;
   padding: 0px;
-  width: 100%;
-  max-height: 60vh;
-  overflow: auto;
-
-  .order-desc {
-    cursor: pointer;
-  }
-
-  .checkbox-item {
-    padding-top: 20px;
-  }
-
+  max-height: 55vh;
+  overflow-y: auto;
   li {
-    padding: 10px;
-    margin-bottom: 10px;
-    width: 100%;
+    padding: 10px 0px;
+    border-top: 1px solid color.scale(white, $lightness: -10%);
   }
-
-  span {
-    padding: 1rem 0px;
-  }
-
-  .cart-img {
-    width: 100%;
-    height: auto;
-  }
+}
+.cart-img {
+  width: 100%;
+}
+.order-desc {
+  cursor: pointer;
+}
+.closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+.delete {
+  cursor: pointer;
+  color: #7e7e7e;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.info {
+  font-size: 12px;
+  color: #565151;
 }
 </style>

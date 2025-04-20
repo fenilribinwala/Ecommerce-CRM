@@ -27,64 +27,60 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
-import notification from '@/services/notificationService';
+<script setup>
+import { ref, computed } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
+import { useNotification } from '@kyvg/vue3-notification';
 
-export default {
-  name: 'ShippingMethod',
-  data() {
-    return {
-      shippingMethods: [
-        {
-          _id: '20 day shipping',
-          name: '20 day shipping',
-        },
-        {
-          _id: 'Expedited Shipping',
-          name: 'Expedited shipping',
-        },
-        {
-          _id: 'No Rush Shipping',
-          name: 'No Rush Shipping',
-        },
-      ],
-    };
-  },
-  methods: {
-    async selected() {
-      if (!this.checkoutInitiated) return;
-      try {
-        await this.$store.dispatch('cartStore/createCheckout', {
-          address: this.selectedAddress,
-          shippingMethod: this.shippingMethod,
-        });
-      } catch (error) {
-        notification.error(
-          this,
-          'Something went haywire while trying to recalculate the prices. Please try again by changing address.',
-        );
-      }
-    },
-  },
-  computed: {
-    shippingMethod: {
-      get() {
-        return this.$store.getters['shippingStore/shippingMethod'];
-      },
+// Initialize stores and notification
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
 
-      set(val) {
-        this.$store.commit('shippingStore/setShippingMethod', val);
-      },
-    },
-
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-      selectedAddress: 'shippingStore/getSelectedAddress',
-      checkoutInitiated: 'cartStore/checkoutInitiated',
-    }),
+// Reactive data
+const shippingMethods = ref([
+  {
+    _id: '20 day shipping',
+    name: '20 day shipping',
   },
-};
+  {
+    _id: 'Expedited Shipping',
+    name: 'Expedited shipping',
+  },
+  {
+    _id: 'No Rush Shipping',
+    name: 'No Rush Shipping',
+  },
+]);
+
+// Computed properties
+const isSessionActive = computed(() => authStore.isSessionActive);
+const selectedAddress = computed(() => shippingStore.getSelectedAddress);
+const checkoutInitiated = computed(() => cartStore.checkoutInitiated);
+const shippingMethod = computed({
+  get: () => shippingStore.shippingMethod,
+  set: (val) => shippingStore.setShippingMethod(val)
+});
+
+// Methods
+async function selected() {
+  if (!checkoutInitiated.value) return;
+  try {
+    await cartStore.createCheckout({
+      address: selectedAddress.value,
+      shippingMethod: shippingMethod.value,
+    });
+  } catch (error) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Something went haywire while trying to recalculate the prices. Please try again by changing address.'
+    });
+  }
+}
 </script>
 
 <style lang="scss">
