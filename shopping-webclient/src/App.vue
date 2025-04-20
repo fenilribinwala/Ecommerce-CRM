@@ -50,10 +50,16 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  // Clean up event listeners
   eventBus.off('before-request', setLoading);
   eventBus.off('request-error', unsetLoading);
   eventBus.off('after-response', unsetLoading);
   eventBus.off('response-error', unsetLoading);
+  
+  // Clear any timeouts
+  if (sessionTimeoutId.value) {
+    clearTimeout(sessionTimeoutId.value);
+  }
 });
 
 function initiateApp() {
