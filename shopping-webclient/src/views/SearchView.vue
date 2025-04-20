@@ -68,33 +68,34 @@ function assignQueryValues(value) {
 
 async function performSearch() {
   const payload = {};
-
   payload.term = term.value;
 
-  if (category.value.length > 0 && subCategory.value.length > 0) {
-    payload.subcategories = _.map(
-      _.filter(
-        masterCategoryList.value,
-        v => v.subcategory === subCategory.value && v.category === category.value,
-      ),
-      '_id',
-    );
-  } else if (subCategory.value.length > 0) {
-    payload.subcategories = _.map(
-      _.filter(
-        masterCategoryList.value,
-        v => v.subcategory === subCategory.value,
-      ),
-      '_id',
-    );
-  } else if (category.value.length > 0) {
-    payload.subcategories = _.map(categories.value[category.value], '_id');
+  // Add null checks for category data
+  if (category.value && subCategory.value && 
+      categories.value && masterCategoryList.value) {
+    if (category.value.length > 0 && subCategory.value.length > 0) {
+      payload.subcategories = _.map(
+        _.filter(
+          masterCategoryList.value,
+          v => v.subcategory === subCategory.value && v.category === category.value
+        ),
+        '_id'
+      );
+    } else if (subCategory.value.length > 0) {
+      payload.subcategories = _.map(
+        _.filter(
+          masterCategoryList.value,
+          v => v.subcategory === subCategory.value
+        ),
+        '_id'
+      );
+    } else if (category.value.length > 0 && categories.value[category.value]) {
+      payload.subcategories = _.map(categories.value[category.value], '_id');
+    }
   }
 
   payload.paging = paging;
-
   const pageResp = await searchStore.searchForProduct(payload);
-
   _.assign(paging, pageResp);
 }
 

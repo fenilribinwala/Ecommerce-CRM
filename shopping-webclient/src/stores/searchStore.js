@@ -3,22 +3,24 @@ import axios from 'axios';
 
 export const useSearchStore = defineStore('searchStore', {
   state: () => ({
-    searchResult: [],
+    _searchResult: [],
     loading: false,
     error: null
   }),
-  
+
   getters: {
-    searchResult: (state) => state.searchResult,
+    searchResult: (state) => state._searchResult,
+    isLoading: (state) => state.loading,
+    getError: (state) => state.error
   },
-  
+
   actions: {
     async searchForProduct(payload) {
       try {
         this.loading = true;
         const response = await axios.post('/api/catalog/search', payload);
         if (response.data.status) {
-          this.searchResult = [...this.searchResult, ...response.data.data.products];
+          this._searchResult = [...this._searchResult, ...response.data.data.products];
           return response.data.data.paging;
         } else {
           this.error = response.data.errorDetails || 'Failed to search products';
@@ -31,16 +33,16 @@ export const useSearchStore = defineStore('searchStore', {
         this.loading = false;
       }
     },
-    
+
     resetStore() {
-      this.searchResult = [];
+      this._searchResult = [];
       this.error = null;
     }
   },
-  
+
   persist: {
     key: 'searchStore',
     storage: localStorage,
-    paths: ['searchResult']
+    paths: ['_searchResult']
   }
 });
