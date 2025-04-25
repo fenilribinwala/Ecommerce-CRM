@@ -1,6 +1,6 @@
 <template>
   <div id="home">
-    <header-menu
+    <HeaderMenu
       @openCart="openCart"
       :rightSidebarVisible="cartViewVisible"
       :sidebarWidth="SIDEBAR_WIDTH"

@@ -17,8 +17,9 @@
         v-model="username"
         placeholder="Enter Email"
         aria-describedby="usernameFeedback"
+        class="form-control"
       ></BFormInput>
-      <BFormInvalidFeedback id="usernameFeedback" class="align-left">
+      <BFormInvalidFeedback id="usernameFeedback" class="text-start">
         Enter a valid email address
       </BFormInvalidFeedback>
     </BFormGroup>
@@ -32,16 +33,17 @@
         @keyup.enter="loginClicked"
         placeholder="Enter Password"
         aria-describedby="passwordFeedback"
+        class="form-control"
       ></BFormInput>
-      <!-- <BFormInvalidFeedback id="passwordFeedback">Enter at least 6 characters.</BFormInvalidFeedback> -->
+      <!-- <BFormInvalidFeedback id="passwordFeedback" class="text-start">Enter at least 6 characters.</BFormInvalidFeedback> -->
     </BFormGroup>
     <!-- <vue-recaptcha @verify="onVerify" @expired="onExpired" :sitekey="recaptchaKey"></vue-recaptcha> -->
-    <p class="info align-left">Please enter the captcha before loggin in.</p>
+    <p class="info text-start">Please enter the captcha before loggin in.</p>
 
     <p class="forget-password" v-if="!forgotEnabled" @click="forgetPassword">Forgot Password?</p>
 
-    <BButton class="login-button" v-if="!forgotEnabled" @click="loginClicked">Login</BButton>
-    <BButton class="login-button" v-if="forgotEnabled" @click="resetPassword">Reset Password</BButton>
+    <BButton class="login-button w-100" v-if="!forgotEnabled" @click="loginClicked">Login</BButton>
+    <BButton class="login-button w-100" v-if="forgotEnabled" @click="resetPassword">Reset Password</BButton>
 
     <p class="register-class" @click="register">New User? Register here.</p>
     <div class="modal-bottom"></div>
@@ -166,5 +168,25 @@ const usernameState = computed(() => {
 .register-class {
   padding-top: 20px;
   cursor: pointer;
+}
+
+.text-start {
+  text-align: left !important;
+}
+.w-100 {
+  width: 100% !important;
+}
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 </style>

@@ -22,7 +22,8 @@ import {
   faPlus,
   faMinus,
   faTimes,
-  faTrash
+  faTrash,
+  faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { VueReCaptcha } from 'vue-recaptcha-v3';
@@ -43,7 +44,8 @@ library.add(
   faPlus,
   faMinus,
   faTimes,
-  faTrash
+  faTrash,
+  faSearch
 );
 
 // Configure axios defaults

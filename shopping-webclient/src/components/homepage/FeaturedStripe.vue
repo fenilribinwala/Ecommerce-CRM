@@ -1,21 +1,21 @@
 <template>
-  <b-jumbotron class="stripecontent">
+  <div class="p-5 mb-4 bg-light rounded-3 stripecontent">
     <BRow class="d-flex flex-row justify-content-center align-items-center">
       <BCol
         sm="2"
         v-for="(product, key) in products"
-        v-bind:key="key"
-        v-bind:style="{ backgroundImage: 'url(' + product.url + ')' }"
+        :key="key"
+        :style="{ backgroundImage: 'url(' + product.url + ')' }"
         class="box d-flex flex-column justify-content-center align-items-center"
         href="#"
       >
-        <div class="description d-flex flex-column justify-content-center align-items-center">
+        <div class="description erere d-flex flex-column justify-content-center align-items-center">
           <h4>{{product.name}}</h4>
           <p>{{product.price}}</p>
         </div>
       </BCol>
     </BRow>
-  </b-jumbotron>
+  </div>
 </template>
 
 <script setup>
@@ -25,17 +25,17 @@ const products = ref([
   {
     name: 'Telly Rwer',
     price: '$45.00',
-    url: 'https://www.forever21.com/images/1_front_750/00252607-02.jpg',
+    url: 'https://imagescdn.forever21.in/img/app/product/8/855098-10039653.jpg?auto=format&w=390',
   },
   {
     name: 'Telly Rwer Jacket',
     price: '$45.00',
-    url: 'https://www.forever21.com/images/1_front_750/00262533-01.jpg',
+    url: 'https://imagescdn.forever21.in/img/app/product/8/854843-10036689.jpg?auto=format&w=390',
   },
   {
     name: 'Defined Bold Dress',
     price: '$44.00',
-    url: 'https://www.forever21.com/images/default_330/00335616-02.jpg',
+    url: 'https://imagescdn.forever21.in/img/app/product/8/855096-10039629.jpg?auto=format&w=390',
   },
   {
     name: 'Bugged Shoes',
@@ -45,7 +45,7 @@ const products = ref([
   {
     name: 'Terminal Pants',
     price: '$45.00',
-    url: 'https://www.forever21.com/images/1_front_750/00239518-02.jpg',
+    url: 'https://imagescdn.forever21.in/img/app/product/8/854186-10028498.jpg?auto=format&w=390',
   },
   {
     name: 'Shaped Tee',
@@ -75,6 +75,7 @@ const products = ref([
 .description:hover {
   color: white;
   background-color: #1b1a1aad;
+  width: -webkit-fill-available;
   -webkit-transition: background-color 500ms linear;
   -ms-transition: background-color 500ms linear;
   transition: background-color 500ms linear;

@@ -68,12 +68,12 @@
     >
       <p class="info">You need to login to add products to the cart.</p>
       <div class="align-center">
-        <b-btn
+        <BButton
           size="sm"
           class="primary-button"
           style="margin-top: 0.2rem;"
           @click="router.push('/login')"
-        >Login</b-btn>
+        >Login</BButton>
       </div>
     </b-popover>
   </div>

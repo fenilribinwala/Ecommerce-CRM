@@ -1,89 +1,94 @@
 <template>
-  <b-jumbotron>
+  <div>
     <div class="d-none d-md-block">
-      <b-row class="d-flex flex-row justify-content-center align-items-center">
-        <b-col
+      <BRow class="d-flex flex-row justify-content-center align-items-center">
+        <BCol
           sm="6"
           class="box d-flex flex-row justify-content-center align-items-center"
           v-for="(product, key) in products"
-          v-bind:key="key"
+          :key="key"
         >
-          <b-col
+          <BCol
             md="6"
             class="box picture1"
-            v-bind:style="{ backgroundImage: 'url(' + product.detailedImageUrls[0] + ')' }"
-          ></b-col>
-          <b-col
+            :style="{ backgroundImage: 'url(' + product.detailedImageUrls[0] + ')' }"
+          ></BCol>
+          <BCol
             md="6"
-            class="box description d-flex flex-column justify-content-center align-items-center"
+            class="description box d-flex flex-column justify-content-center align-items-center"
           >
-            <h4>{{product.name}}</h4>
-            <p>{{product.brand}}</p>
+            <h4>{{ product.name }}</h4>
+            <p>{{ product.brand }}</p>
             <h5>
               <span
                 v-if="!product.marked_price || product.marked_price.amount <= 0"
                 :class="{'underline': product.marked_price && product.marked_price.amount > 0}"
-              >{{product.price.amount + ' ' + product.price.currency}}</span>
+              >{{ product.price.amount + ' ' + product.price.currency }}</span>
               <span
                 v-if="product.marked_price && product.marked_price.amount > 0"
-              >{{product.marked_price.amount}} {{product.marked_price.currency}}</span>
+              >{{ product.marked_price.amount }} {{ product.marked_price.currency }}</span>
             </h5>
 
             <!-- <router-link :to="`/products/${product._id}`"> -->
-            <b-button class="addToCart" @click="shop(product)">Shop Now</b-button>
+            <BButton class="addToCart" @click="shop(product)">Shop Now</BButton>
             <!-- </router-link> -->
-          </b-col>
-        </b-col>
-      </b-row>
+          </BCol>
+        </BCol>
+      </BRow>
     </div>
 
     <!-- Design for mobile view -->
     <div class="d-block d-md-none d-none" style="background: white">
-      <div class="product-card align-left" v-for="(product, key) in products" v-bind:key="key">
+      <div class="product-card align-left" v-for="(product, key) in products" :key="key">
         <div class="link" @click="openProductDetail(product._id)">
           <div class="img-parent" v-if="product.detailedImageUrls.length > 0">
             <img class="img-cls-featured" :src="product.detailedImageUrls[0]">
           </div>
 
           <div class="product-card-desc">
-            <p>{{product.name}}</p>
-            <p>{{product.brand}}</p>
+            <p>{{ product.name }}</p>
+            <p>{{ product.brand }}</p>
             <p>
               <strong>
                 <span
                   v-if="!product.marked_price || product.marked_price.amount <= 0"
                   :class="{'underline': product.marked_price && product.marked_price.amount > 0}"
-                >{{product.price.amount + ' ' + product.price.currency}}</span>
+                >{{ product.price.amount + ' ' + product.price.currency }}</span>
                 <span
                   v-if="product.marked_price && product.marked_price.amount > 0"
-                >{{product.marked_price.amount}} {{product.marked_price.currency}}</span>
+                >{{ product.marked_price.amount }} {{ product.marked_price.currency }}</span>
               </strong>
             </p>
 
             <!-- <router-link :to="`/products/${product._id}`"> -->
-            <b-button class="addToCart" @click="shop(product)">Shop Now</b-button>
+            <BButton class="addToCart" @click="shop(product)">Shop Now</BButton>
           </div>
         </div>
       </div>
     </div>
-  </b-jumbotron>
+  </div>
 </template>
 
-<script>
-export default {
-  name: 'FeaturedProducts',
-  props: {
-    products: {
-      required: true,
-      type: Array,
-    },
+<script setup>
+import {defineProps, defineEmits} from 'vue';
+
+const props = defineProps({
+  products: {
+    required: true,
+    type: Array,
   },
-  methods: {
-    shop(product) {
-      this.$emit('shop', product);
-    },
-  },
-};
+});
+
+const emit = defineEmits(['shop']);
+
+function shop(product) {
+  emit('shop', product);
+}
+
+function openProductDetail(productId) {
+  // You may want to emit an event or use a router push here
+  // Example: emit('openProductDetail', productId);
+}
 </script>
 
 <style lang="scss" scoped>
@@ -128,6 +133,7 @@ h5 {
 
   .product-card-desc {
     margin-top: 0.5em;
+
     .title {
       height: 2em;
       text-overflow: ellipsis;
@@ -142,6 +148,7 @@ h5 {
   .link {
     cursor: pointer;
   }
+
   p {
     padding: 3px 5px;
     margin: 0px;
@@ -164,6 +171,7 @@ h5 {
   background-size: 150%;
   -webkit-transition: all 0.5s ease-in-out;
 }
+
 .description {
   background-color: white;
 }

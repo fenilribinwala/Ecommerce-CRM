@@ -8,18 +8,18 @@
         <div>
           {{isSessionActive ? 'Your cart is empty.' : 'You need to login first to add to cart'}}
           <br>
-          <b-btn
+          <BButton
             class="primary-button"
             v-if="!isSessionActive"
             @click="router.push('/login')"
-          >Login</b-btn>
+          >Login</BButton>
         </div>
       </div>
     </div>
     <ul class="orders">
       <li v-for="(item, itemIndex) in orders" v-bind:key="itemIndex">
-        <b-row>
-          <b-col cols="3" style="padding-right: 0">
+        <BRow>
+          <BCol cols="3" style="padding-right: 0">
             <img
               :src="item.product.thumbnailUrls[0]"
               alt="No Image"
@@ -27,8 +27,8 @@
               v-if="item.product.thumbnailUrls && item.product.thumbnailUrls.length > 0"
               @click="gotoProduct(item.product)"
             >
-          </b-col>
-          <b-col cols="9">
+          </BCol>
+          <BCol cols="9">
             <div class="order-desc" @click="gotoProduct(item.product)">
               <strong>
                 {{item.product.name}}
@@ -45,7 +45,7 @@
             </div>
             <div class="delete" @click="deleteSelected(item)" style="margin: 5px 0px">Delete</div>
             <div>
-              <b-form-select
+              <BFormSelect
                 size="sm"
                 v-model="item.counts"
                 :options="countOptions"
@@ -54,24 +54,24 @@
                 style="max-width: 100px"
               />
             </div>
-          </b-col>
-        </b-row>
+          </BCol>
+        </BRow>
       </li>
     </ul>
 
     <div class="total-line align-center bottom-action" v-if="orders && orders.length > 0">
-      <b-row>
+      <BRow>
         <!-- <hr> -->
-        <b-col cols="8" class="align-left">
+        <BCol cols="8" class="align-left">
           <strong>Sub Total</strong>
-        </b-col>
-        <b-col class="align-right">
+        </BCol>
+        <BCol class="align-right">
           <strong>{{subtotal.currency}} {{parseFloat(subtotal.amount).toFixed(2)}}</strong>
-        </b-col>
-      </b-row>
+        </BCol>
+      </BRow>
       <br>
       <p class="info align-center">Final cost will be calculated during checkout.</p>
-      <b-btn class="addToCart" @click="gotoCheckout()">Checkout</b-btn>
+      <BButton class="addToCart" @click="gotoCheckout()">Checkout</BButton>
     </div>
   </div>
 </template>

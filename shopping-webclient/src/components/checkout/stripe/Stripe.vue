@@ -11,12 +11,12 @@
       @token="payWithGpay"
     />
     <br />
-    <b-btn
+    <BButton
       class="pay-with-stripe"
       @click="pay($event)"
       :disabled="!complete"
       style="font-family: Libre Baskerville; font-size: 14px"
-      >Pay by card</b-btn
+      >Pay by card</BButton
     >
   </div>
 </template>
@@ -78,7 +78,7 @@ async function pay(event) {
         checkoutId: checkout,
       },
     });
-    
+
     if (data && data.httpStatus === 200) {
       console.log(data.responseData);
       if (data.responseData) {

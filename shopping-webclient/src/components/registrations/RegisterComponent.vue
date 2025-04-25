@@ -88,7 +88,7 @@
     <p class="info align-left success-text" v-else>reCAPTCHA verified ✓</p>
 
     <div class="modal-bottom"></div>
-    <b-btn class="register-button" @click="registerClicked()">Register</b-btn>
+    <BButton class="register-button" @click="registerClicked()">Register</BButton>
 
     <p class="register-class" @click="loginNavigation()">Already a User? Go back to login.</p>
     <div class="modal-bottom"></div>

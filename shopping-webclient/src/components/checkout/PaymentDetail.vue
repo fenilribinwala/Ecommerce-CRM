@@ -6,9 +6,9 @@
     <br />
     <hr />
     <div class="align-center">
-      <b-btn class="primary-button" @click="handlePayment()">Pay with BKASH</b-btn>&nbsp;&nbsp;
+      <BButton class="primary-button" @click="handlePayment()">Pay with BKASH</BButton>&nbsp;&nbsp;
     </div>
-    <!-- <b-btn disabled class="primary-button">Pay with Khalti</b-btn> -->
+    <!-- <BButton disabled class="primary-button">Pay with Khalti</BButton> -->
     <div class="align-center">
       <khalti :text="'Pay with Khalti'" :config="khaltiConfig" :total="totalPrice" @success="startKhaltiPayment" />
     </div>

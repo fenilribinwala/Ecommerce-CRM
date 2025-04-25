@@ -1,61 +1,66 @@
 <template>
   <div id="header-menu">
-    <b-navbar
+    <BNavbar
       toggleable="md"
       fixed="top"
       class="header-color header-width"
       type="light"
       :style="headerStyle"
     >
-      <button target="nav_collapse" @click="burgerClick()" class="d-sm-block d-md-none burger">
+      <BButton
+        variant="link"
+        class="d-sm-block d-md-none burger p-2 border-0 shadow-none"
+        @click="burgerClick"
+        aria-label="Toggle navigation"
+      >
         <span class="navbar-toggler-icon"></span>
-      </button>
+      </BButton>
 
-      <b-navbar-brand to="/">
+      <BNavbarBrand to="/" class="p-0">
         <img
           src="@/assets/logo_transparent_blue_black.png"
           alt="VENIQA"
           width="125px"
           style="padding: 0.5rem 0rem;"
         >
-      </b-navbar-brand>
+      </BNavbarBrand>
 
-      <b-nav-item class="d-xs-block d-sm-block d-md-none" @click="$emit('openCart')">
+      <BNavItem class="d-xs-block d-sm-block d-md-none position-relative" @click="$emit('openCart')">
         <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-        <b-badge :pill="true" variant="danger">{{totalOrders}}</b-badge>
-      </b-nav-item>
+        <BBadge pill variant="danger" class="position-absolute top-0 start-100 translate-middle">{{totalOrders}}</BBadge>
+      </BNavItem>
 
       <div class="mobile-search-bar d-xs-block d-sm-block d-md-none">
         <input
           type="text"
-          class="special-search-input"
+          class="form-control special-search-input"
           placeholder="Search for products"
           v-model="searchTerm"
           style="width: 100%"
-          @keyup.enter="searchProduct()"
+          @keyup.enter="searchProduct"
           @keydown.esc="showSearch = false"
         >
       </div>
 
       <transition
         name="shipping-form-anim"
-        enter-active-class="animated slideInLeft slower"
-        leave-active-class="animated slideOutLeft slower"
+        enter-active-class="animate__animated animate__slideInLeft animate__slower"
+        leave-active-class="animate__animated animate__slideOutLeft animate__slower"
       >
-        <b-collapse is-nav id="nav_collapse" class="collapsible-content">
-          <b-navbar-nav class="ml-auto">
+        <BCollapse is-nav id="nav_collapse" class="collapsible-content">
+          <BNavbarNav class="ms-auto">
             <transition
               name="shipping-form-anim"
-              enter-active-class="animated fadeInRight faster"
-              leave-active-class="animated fadeOutLeft faster"
+              enter-active-class="animate__animated animate__fadeInRight animate__faster"
+              leave-active-class="animate__animated animate__fadeOutLeft animate__faster"
             >
               <input
                 type="text"
-                class="special-search-input d-none d-md-block"
+                class="form-control special-search-input d-none d-md-block"
                 placeholder="Search for products"
                 v-if="showSearch"
                 v-model="searchTerm"
-                @keyup.enter="searchProduct()"
+                @keyup.enter="searchProduct"
                 @keydown.esc="showSearch = false"
               >
             </transition>
@@ -68,62 +73,37 @@
               />
             </div>
 
-            <b-nav-item @click="openCategory('Women')" class="veniqa-nav d-none d-md-block">Women</b-nav-item>
-            <b-nav-item @click="openCategory('Men')" class="veniqa-nav d-none d-md-block">Men</b-nav-item>
+            <BNavItem @click="openCategory('Women')" class="veniqa-nav d-none d-md-block">Women</BNavItem>
+            <BNavItem @click="openCategory('Men')" class="veniqa-nav d-none d-md-block">Men</BNavItem>
 
-            <b-nav-item
+            <BNavItem
               class="veniqa-nav d-none d-md-block"
               to="/login"
               v-if="!isSessionActive"
-            >Login</b-nav-item>
+            >Login</BNavItem>
 
-            <b-nav-item-dropdown
+            <BNavItemDropdown
               class="veniqa-nav d-none d-md-block"
               :text="nameOfUser"
               right
               v-else
             >
-              <b-dropdown-item href="#">Profile</b-dropdown-item>
-              <b-dropdown-item v-if="isSessionActive" to="/orders">Orders</b-dropdown-item>
-              <b-dropdown-item @click="logoutClicked()">Logout</b-dropdown-item>
-            </b-nav-item-dropdown>
-            <!-- </b-nav-item> -->
-            <!-- <b-nav-item class="veniqa-nav d-none d-md-block" to="/checkout"> -->
-            <b-nav-item class="veniqa-nav d-none d-md-block" @click="$emit('openCart')">
+              <BDropdownItem href="#">Profile</BDropdownItem>
+              <BDropdownItem v-if="isSessionActive" to="/orders">Orders</BDropdownItem>
+              <BDropdownItem @click="logoutClicked()">Logout</BDropdownItem>
+            </BNavItemDropdown>
+            <BNavItem class="veniqa-nav d-none d-md-block position-relative" @click="$emit('openCart')">
               <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-              <b-badge :pill="true" variant="danger">{{totalOrders}}</b-badge>
-            </b-nav-item>
-          </b-navbar-nav>
+              <BBadge pill variant="danger" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">{{totalOrders}}</BBadge>
+            </BNavItem>
+          </BNavbarNav>
 
-          <!-- Displays only when collapsible option is true -->
-          <div class="sidenav ml-auto d-md-none">
+          <div class="sidenav ms-auto d-md-none">
             <LeftMenuView/>
-            <!-- <div class="align-right close-icon">
-              <font-awesome-icon v-b-toggle.nav_collapse icon="times"/>
-            </div>
-            <b-nav-item class="align-left collapse-nav" to="/vendor/amazon">Men's Clothing
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav" to="/vendor/amazon">Women's Clothing
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav">Profile
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav" to="/login" v-if="!isSessionActive">Login</b-nav-item>
-            <hr>
-            <b-nav-item class="align-left collapse-nav" v-if="isSessionActive" to="/orders">Orders</b-nav-item>
-            <b-nav-item
-              class="d-none d-md-block collapse-nav"
-              to="/login"
-              v-if="!isSessionActive"
-            >Login</b-nav-item>
-            <b-nav-item class="align-left collapse-nav" @click="logoutClicked()" v-else>Logout</b-nav-item>-->
           </div>
-          <!-- End of Collapsible view display -->
-        </b-collapse>
+        </BCollapse>
       </transition>
-    </b-navbar>
+    </BNavbar>
   </div>
 </template>
 

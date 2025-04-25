@@ -50,11 +50,11 @@
             </div>
           </div>
           <div class="align-center">
-            <b-btn
+            <BButton
               class="primary-button"
               @click="loadMoreProducts()"
               v-show="data.length < paging.total"
-            >See More</b-btn>
+            >See More</BButton>
           </div>
         </div>
         <div v-else>

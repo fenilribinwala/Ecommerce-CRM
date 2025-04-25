@@ -11,8 +11,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import {ref, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
 import Product from '@/data/featuredProduct.json';
 import FeatureService from '@/services/FeaturedService';
 import FeaturedStripe from '@/components/homepage/FeaturedStripe.vue';
@@ -33,20 +33,29 @@ onMounted(() => {
     .then((data) => {
       featuredDesigns.value = data;
     })
-    .catch((err) => { console.log(err); });
+    .catch((err) => {
+      console.log(err);
+    });
 });
 </script>
 
 <style lang="scss">
 @import '../../assets/css/global.scss';
+@import '../../assets/css/sidebar.scss';
+@import '../../assets/css/overrides.scss';
+@import '../../assets/css/hover.css';
+@import '../../assets/css/drift-basic.css';
 
-.designs{
+
+.designs {
   margin-bottom: 1rem;
 }
+
 .veniqa-button:hover {
   background-color: $pitch-black;
   border: 2px solid $pitch-black;
 }
+
 .absolute-buttons {
   position: absolute;
   bottom: 0;
@@ -63,7 +72,6 @@ onMounted(() => {
   background-position-x: center;
 
   .content {
-    margin-top: 100px;
     display: flex;
     height: 100%;
     margin: auto;
@@ -78,6 +86,7 @@ onMounted(() => {
   padding: 0px 0px 0px 0px !important;
   margin: 0px 0px 0px 0px !important;
 }
+
 .featured-title {
   margin: 0px 0px 0px 0px;
   padding: 40px 10px;
