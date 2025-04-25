@@ -97,7 +97,7 @@
 
           <!-- Displays only when collapsible option is true -->
           <div class="sidenav ml-auto d-md-none">
-            <left-menu-view/>
+            <LeftMenuView/>
             <!-- <div class="align-right close-icon">
               <font-awesome-icon v-b-toggle.nav_collapse icon="times"/>
             </div>

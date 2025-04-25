@@ -198,15 +198,21 @@ async function deleteSelected(item) {
 <style lang="scss" scoped>
 @import '../../assets/css/global.scss';
 
-.delete {
+.edit-bag {
+  font-size: 18px;
+  margin-left: 20px;
+  color: #bdbdbd;
   cursor: pointer;
-  color: #7e7e7e;
-  font-size: 12px;
-  text-decoration: underline;
 }
 
+
+.total-line {
+  padding: 10px;
+}
+.order-detail {
+  margin-top: 30px;
 .order-empty {
-  // height: 500px;
+    height: 500px;
   line-height: 500px;
   color: #bdbdbd;
   font-size: 1.5em;
@@ -221,26 +227,26 @@ async function deleteSelected(item) {
 
 .orders {
   list-style-type: none;
-  padding: 10px 0px;
-  margin-top: 20px;
+    padding: 0px;
   width: 100%;
-  li {
-    padding: 10px 0px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #ddd;
-    width: 100%;
-  }
-
-  span {
-    padding: 1rem 0px;
-  }
 
   .order-desc {
     cursor: pointer;
   }
+
+    .checkbox-item {
+      padding-top: 20px;
 }
 
-.total-line {
-  margin-top: 20px;
+    li {
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+
+      &:nth-child(even) {
+        background: #eeeeee;
+      }
+    }
+  }
 }
 </style>

@@ -3,7 +3,7 @@
     <notifications position="bottom center" classes="vue-notification main-notification" width="100%" />
     <notifications group="toast" class="toast-noti" classes="vue-notification toast-notification" position="top right" />
     <div class="spinner-container" v-if="isLoading">
-      <component :is="loadingComponent" 
+      <component :is="loadingComponent"
         v-model:active="isLoading"
         :can-cancel="false"
         :is-full-page="true"
@@ -55,7 +55,7 @@ onUnmounted(() => {
   eventBus.off('request-error', unsetLoading);
   eventBus.off('after-response', unsetLoading);
   eventBus.off('response-error', unsetLoading);
-  
+
   // Clear any timeouts
   if (sessionTimeoutId.value) {
     clearTimeout(sessionTimeoutId.value);
@@ -88,54 +88,52 @@ function unsetLoading() {
 }
 </script>
 
-<style lang="scss">
-.spinner-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.main-notification {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.toast-notification {
-  margin: 10px 0;
-  padding: 10px 20px;
-  border-radius: 4px;
-  background: #44A4FC;
-  color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.toast-noti {
-  margin-top: 60px;
-}
-
-.notification {
-  &.warn {
-    background: #ffb648;
-  }
-
-  &.error {
-    background: #E54D42;
-  }
-
-  &.success {
-    background: #68CD86;
-  }
-}
+<style>
+@import url('https://fonts.googleapis.com/css?family=Karla');
 
 #app {
   font-family: 'Quicksand','Raleway', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  margin: 0px;
+  color: rgba(34,34,34,.7);
+  /* height: 100%; */
+  font-size: 0.93em;
+}
+
+@media (max-width: 768px) {
+  #app {
+    overflow: hidden;
+  }
+}
+
+html,
+body {
+  margin: 0px;
+  height: 100%;
+}
+
+.container {
+  margin: 0px;
+}
+
+.toast-notification {
+  /* margin-top: 100px !important; */
+  font-size: 0.8em !important;
+  padding: 20px 10px !important;
+}
+
+.toast-noti {
+  top: 100px !important;
+}
+
+.spinner {
+  position: fixed !important;
+  top: 0px !important;
+  height: 100vh !important;
+  width: 100% !important;
+  z-index: 10000 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
 }
 </style>

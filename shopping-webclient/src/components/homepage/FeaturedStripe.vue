@@ -1,7 +1,7 @@
 <template>
   <b-jumbotron class="stripecontent">
-    <b-row class="d-flex flex-row justify-content-center align-items-center">
-      <b-col
+    <BRow class="d-flex flex-row justify-content-center align-items-center">
+      <BCol
         sm="2"
         v-for="(product, key) in products"
         v-bind:key="key"
@@ -13,51 +13,46 @@
           <h4>{{product.name}}</h4>
           <p>{{product.price}}</p>
         </div>
-      </b-col>
-    </b-row>
+      </BCol>
+    </BRow>
   </b-jumbotron>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      products: [
-        {
-          name: 'Telly Rwer',
-          price: '$45.00',
-          url: 'https://www.forever21.com/images/1_front_750/00252607-02.jpg',
-        },
-        {
-          name: 'Telly Rwer Jacket',
-          price: '$45.00',
-          url: 'https://www.forever21.com/images/1_front_750/00262533-01.jpg',
-        },
-        {
-          name: 'Defined Bold Dress',
-          price: '$44.00',
-          url: 'https://www.forever21.com/images/default_330/00335616-02.jpg',
-        },
-        {
-          name: 'Bugged Shoes',
-          price: '$46.00',
-          url:
-            'https://i.pinimg.com/originals/05/07/fd/0507fd06e18f9101f3a4b95b17f2896c.jpg',
-        },
-        {
-          name: 'Terminal Pants',
-          price: '$45.00',
-          url: 'https://www.forever21.com/images/1_front_750/00239518-02.jpg',
-        },
-        {
-          name: 'Shaped Tee',
-          price: '$77.00',
-          url: 'https://www.forever21.com/images/default_330/00329137-02.jpg',
-        },
-      ],
-    };
+<script setup>
+import { ref } from 'vue';
+
+const products = ref([
+  {
+    name: 'Telly Rwer',
+    price: '$45.00',
+    url: 'https://www.forever21.com/images/1_front_750/00252607-02.jpg',
   },
-};
+  {
+    name: 'Telly Rwer Jacket',
+    price: '$45.00',
+    url: 'https://www.forever21.com/images/1_front_750/00262533-01.jpg',
+  },
+  {
+    name: 'Defined Bold Dress',
+    price: '$44.00',
+    url: 'https://www.forever21.com/images/default_330/00335616-02.jpg',
+  },
+  {
+    name: 'Bugged Shoes',
+    price: '$46.00',
+    url: 'https://i.pinimg.com/originals/05/07/fd/0507fd06e18f9101f3a4b95b17f2896c.jpg',
+  },
+  {
+    name: 'Terminal Pants',
+    price: '$45.00',
+    url: 'https://www.forever21.com/images/1_front_750/00239518-02.jpg',
+  },
+  {
+    name: 'Shaped Tee',
+    price: '$77.00',
+    url: 'https://www.forever21.com/images/default_330/00329137-02.jpg',
+  },
+]);
 </script>
 
 <style lang="scss" scoped>

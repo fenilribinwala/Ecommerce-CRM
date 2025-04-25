@@ -167,7 +167,7 @@ async function registerClicked() {
   if (!recaptchaVerified.value) {
     await verifyRecaptcha();
   }
-  
+
   if (
     usernameState.value &&
     passwordState.value &&
@@ -205,10 +205,5 @@ onMounted(async () => {
 .register-class {
   padding-top: 20px;
   cursor: pointer;
-}
-
-.success-text {
-  color: green;
-  font-weight: bold;
 }
 </style>

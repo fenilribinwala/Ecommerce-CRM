@@ -160,8 +160,6 @@ const isSessionActive = computed(() => authStore.isSessionActive);
 </script>
 
 <style lang="scss" scoped>
-@use "sass:color";
-
 #cart {
   padding: 0rem 0.5rem;
   h4 {
@@ -180,7 +178,7 @@ const isSessionActive = computed(() => authStore.isSessionActive);
     height: 25vh;
     padding-top: 2rem;
     padding-bottom: 2rem;
-    background-color: color.scale(white, $lightness: -5%);
+    background-color: darken(white, 5%);
   }
 
   .order-empty {
@@ -200,34 +198,31 @@ const isSessionActive = computed(() => authStore.isSessionActive);
 .orders {
   list-style-type: none;
   padding: 0px;
-  max-height: 55vh;
-  overflow-y: auto;
-  li {
-    padding: 10px 0px;
-    border-top: 1px solid color.scale(white, $lightness: -10%);
-  }
-}
-.cart-img {
   width: 100%;
-}
+  max-height: 60vh;
+  overflow: auto;
+
 .order-desc {
   cursor: pointer;
 }
-.closebtn {
-  position: absolute;
-  top: 0;
-  right: 25px;
-  font-size: 36px;
-  margin-left: 50px;
+
+  .checkbox-item {
+    padding-top: 20px;
+  }
+
+  li {
+    padding: 10px;
+    margin-bottom: 10px;
+    width: 100%;
 }
-.delete {
-  cursor: pointer;
-  color: #7e7e7e;
-  font-size: 12px;
-  text-decoration: underline;
-}
-.info {
-  font-size: 12px;
-  color: #565151;
+
+  span {
+    padding: 1rem 0px;
+  }
+
+  .cart-img {
+    width: 100%;
+    height: auto;
+  }
 }
 </style>

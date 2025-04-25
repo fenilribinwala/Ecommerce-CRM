@@ -6,45 +6,35 @@
       <design-entry :design="design" @shop="gotoProduct"/>
     </div>
     <h1 class="featured-title">Hottest Trends</h1>
-    <featured-stripe/>
+    <FeaturedStripe/>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Product from '@/data/featuredProduct.json';
 import FeatureService from '@/services/FeaturedService';
 import FeaturedStripe from '@/components/homepage/FeaturedStripe.vue';
 import DesignEntry from '@/components/homepage/designs/DesignEntry.vue';
 
-export default {
-  name: 'MainPage',
-  components: {
-    FeaturedStripe,
-    DesignEntry,
-  },
-  data() {
-    return {
-      product: null,
-      currentSection: 'homepage',
-      featuredDesigns: [],
-    };
-  },
+const router = useRouter();
+const product = ref(null);
+const currentSection = 'homepage';
+const featuredDesigns = ref([]);
 
-  methods: {
-    gotoProduct(product) {
-      this.$router.push(`/products/${product._id}`);
-    },
-  },
+function gotoProduct(product) {
+  router.push(`/products/${product._id}`);
+}
 
-  created() {
-    this.product = Product;
-    FeatureService.getFeatureListFor(this.currentSection)
-      .then((data) => {
-        this.featuredDesigns = data;
-      })
-      .catch((err) => { console.log(err); });
-  },
-};
+onMounted(() => {
+  product.value = Product;
+  FeatureService.getFeatureListFor(currentSection)
+    .then((data) => {
+      featuredDesigns.value = data;
+    })
+    .catch((err) => { console.log(err); });
+});
 </script>
 
 <style lang="scss">

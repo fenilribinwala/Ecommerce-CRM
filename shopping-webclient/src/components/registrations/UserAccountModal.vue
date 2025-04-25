@@ -82,7 +82,7 @@ async function login(userInfo) {
   try {
     loaderStore.setLoader();
     const data = await authStore.login(userInfo);
-    
+
     if (data.cart && data.cart.items.length > 0) {
       const incomingProductIds = _.map(data.cart, 'product_id');
       // Update the cart values.
@@ -98,14 +98,14 @@ async function login(userInfo) {
           });
         }
       });
-      
+
       if (toAdd.length > 0) {
         await cartStore.addToTheCart(toAdd);
       } else {
         await cartStore.fetchCart();
       }
     }
-    
+
     emit('loginSuccess');
     localStorage.setItem('sessionDT', moment().format());
 
@@ -131,14 +131,14 @@ async function register(userInfo) {
   try {
     loaderStore.setLoader();
     await authStore.signup(userInfo);
-    
+
     notify({
       group: 'all',
       type: 'success',
       title: 'Registration Complete',
       text: 'Please follow the link sent to your email to confirm your account.',
     });
-    
+
     navigateToLogin();
   } catch (error) {
     notify({
@@ -162,46 +162,40 @@ function navigateToLogin() {
 </script>
 
 <style lang="scss" scoped>
-.account-all {
-  margin: 0;
-  height: 100%;
-  color: black;
-}
-
-.account-cols {
-  padding: 0;
-  height: 100%;
-}
-
 .account-table {
   display: table;
   height: 100%;
   width: 100%;
-}
 
 .account-body {
   display: table-row;
-  height: 20%;
-}
-
 .account-content {
   display: table-cell;
   vertical-align: middle;
-  text-align: center;
-  height: 100%;
+      padding-left: 3rem;
+      padding-right: 1.5rem;
+    }
 
-  &.image {
-    padding: 10px 0;
+    .image {
+      height: 100px;
+      width: 100%;
+    }
+  }
+}
+
+.account-all {
+  height: 100vh;
+
+  .account-cols {
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
 .advertisement-bg {
-  background: linear-gradient(to right, #267871, #136a8a);
+  background-image: url(./../../assets/images/fashion.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
   height: 100%;
-}
-
-.inside-section {
-  max-width: 500px;
-  margin: auto;
 }
 </style>

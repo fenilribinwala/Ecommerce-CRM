@@ -133,88 +133,67 @@ function loadMoreProducts() {
 </script>
 
 <style lang="scss">
-.product-detail {
-  padding: 0px 10px 10px 10px;
+.search-result-view {
+  text-align: left;
+  width: 80%;
+  margin: auto;
+  padding: 30px 0px;
+  padding-bottom: 3rem;
+}
+
+.result-view {
+  margin-top: 1em;
 }
 
 .product-card {
-  padding: 5px;
-  height: 350px;
-  width: 210px;
   display: inline-block;
-  overflow: hidden;
-  margin: 15px 10px;
-  vertical-align: top;
+  // box-shadow: 3px 4px 5px 0px #ccc;
+  // background-color: white;
+  border-radius: 0px;
+  margin: 20px 20px 30px 0px;
+  width: 225px;
 
-  .link {
-    cursor: pointer;
-  }
+  // &:hover .img-cls {
+  //   transform: scale(1.2);
+  //   transition: all 0.5s;
+  // }
 
   .img-parent {
-    height: 250px;
-    text-align: center;
+    height: 300px;
+    width: 225px;
+  overflow: hidden;
   }
 
   .product-card-desc {
-    padding: 5px;
-    text-align: left;
-
-    .info {
-      color: #bdbdbd;
-      padding: 0px;
-      margin: 0px;
-      font-size: 12px;
-    }
-
+    margin-top: 0.5em;
     .title {
-      font-size: 14px;
-      width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
+      height: 2em;
       text-overflow: ellipsis;
-      padding: 0px;
-      margin: 0px;
+      overflow: hidden;
     }
+
+    .price {
+      font-weight: bold;
   }
 }
 
-.beginner {
-  padding: 0px;
+  .link {
+    cursor: pointer;
 }
-
-.product-list {
-  padding: 0px;
+  p {
+    padding: 3px 5px;
   margin: 0px;
 }
-
-ul {
-  padding-left: 0px;
 }
 
 .bcrumb {
-  color: #bdbdbd;
-  margin-left: 10px;
+  font-size: 0.75em;
 }
+.product-detail {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 
-.underline {
-  text-decoration: line-through;
-}
-
-.space {
-  height: 65px;
-}
-
-.side-menu {
-  position: fixed;
-  padding: 0px 10px 0px 10px;
-  height: 100%;
-  width: 250px;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.025);
-  transition: 0.3s;
-  left: 0;
-  top: 175px;
-  z-index: 2;
-  overflow-x: hidden;
-  background-color: white;
+  margin-bottom: 10px;
 }
 </style>

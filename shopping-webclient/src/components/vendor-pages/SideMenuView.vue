@@ -58,7 +58,7 @@ function openSubCategory(subcat, keyy) {
   if (props.term) q.term = props.term;
   q.category = props.category;
   q.subCategory = subcat.subcategory;
-  
+
   router.push({
     path: '/search',
     query: {
@@ -99,17 +99,11 @@ a {
   margin: 0px !important;
 }
 li {
-  list-style-type: none !important;
-  padding: 0.2rem 0rem;
-  cursor: pointer;
-
-  a:hover {
-    color: black;
-    text-decoration: underline;
+  margin-bottom: 5px;
+  margin-top: 5px;
   }
 
   .bold {
-    font-weight: 600;
-  }
+  font-weight: bold;
 }
 </style>

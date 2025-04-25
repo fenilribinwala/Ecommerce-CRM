@@ -86,8 +86,6 @@ async function logoutClicked() {
 </script>
 
 <style lang="scss">
-@use "sass:color";
-
 #left-menu {
   .content {
     font-size: 1.2rem;
@@ -119,7 +117,7 @@ async function logoutClicked() {
       height: 20vh;
       margin-bottom: 0;
       padding-top: 1rem;
-      background-color: color.scale(whitesmoke, $lightness: -5%);
+      background-color: darken($color: whitesmoke, $amount: 5);
 
       p {
         cursor: pointer;

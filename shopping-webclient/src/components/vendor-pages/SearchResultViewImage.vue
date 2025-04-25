@@ -1,12 +1,12 @@
 <template>
   <div id="search-result-view-image">
-    <img v-if="product && product.thumbnailUrls && product.thumbnailUrls.length > 0" 
-      v-show="!isHover" 
+    <img v-if="product && product.thumbnailUrls && product.thumbnailUrls.length > 0"
+      v-show="!isHover"
       class="img-cls"
-      @mouseover="isHover = true" 
+      @mouseover="isHover = true"
       :src="product.thumbnailUrls[0]"/>
-    <img v-if="product && product.thumbnailUrls && product.thumbnailUrls.length > 0" 
-      v-show="isHover" 
+    <img v-if="product && product.thumbnailUrls && product.thumbnailUrls.length > 0"
+      v-show="isHover"
       class="img-cls"
       @mouseleave="isHover = false"
       :src="product.thumbnailUrls.length > 1 ? product.thumbnailUrls[1] : product.thumbnailUrls[0]" >
@@ -32,8 +32,8 @@ const isHover = ref(false);
 
 // Computed properties
 const hasThumbnails = computed(() => {
-  return props.product && 
-         props.product.thumbnailUrls && 
+  return props.product &&
+         props.product.thumbnailUrls &&
          props.product.thumbnailUrls.length > 0;
 });
 
@@ -46,13 +46,13 @@ function getPictureStyle() {
       marginBottom: '10px',
     };
   }
-  
+
   let picture = props.product.thumbnailUrls[0];
 
   if (isHover.value && props.product.thumbnailUrls.length > 1) {
     picture = props.product.thumbnailUrls[1];
   }
-  
+
   return {
     backgroundImage: `url(${picture})`,
     backgroundSize: 'cover',
@@ -65,9 +65,6 @@ function getPictureStyle() {
 #search-result-view-image {
   height: 100%;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .img-cls {
@@ -75,17 +72,5 @@ function getPictureStyle() {
   border-top-left-radius: 0.25rem;
   height: auto;
   width: 100%;
-  max-height: 100%;
-  object-fit: cover;
-}
-
-.no-image {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #bdbdbd;
-  font-size: 4em;
 }
 </style>

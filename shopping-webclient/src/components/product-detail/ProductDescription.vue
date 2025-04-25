@@ -138,9 +138,9 @@ async function addToCart() {
       }|${selectedCustomizations[key].hexValue}`;
     }
   });
-  
+
   const val = await cartStore.addToTheCart([product.value]);
-  
+
   if (val) {
     notify({
       group: 'toast',
@@ -201,39 +201,40 @@ function decreaseCount() {
       display: inline-block;
       height: 30px;
       width: 30px;
-      margin-right: 5px;
-      border-radius: 5px;
-      border: 1px solid #dbdbdb;
+      margin-right: 10px;
 
       &:hover {
         cursor: pointer;
       }
 
-      &.selected {
-        border: 3px solid black;
+      .selected {
+        border: 2px solid black;
       }
     }
   }
 
-  h5 {
-    margin-bottom: 10px;
+  .custom-attributes {
+    margin-top: 1rem;
+  }
+  .section-title {
+    font-size: 1.2em;
   }
 
   .add-to-cart {
-    padding: 5px 8px;
-    background-image: linear-gradient(to right, #267871, #136a8a) !important;
+    background-color: white; /*this for transparent button*/
+    border: 2px solid black; /* this is for button border*/
+    border-radius: 0px;
+    color: black;
+    padding: 10px 40px;
   }
-
-  .selector {
-    color: gray;
-    font-size: 14px;
-    text-transform: uppercase;
+  .add-to-cart:hover {
+    background-color: black; /*this for transparent button*/
+    border: 2px solid black; /* this is for button border*/
+    border-radius: 0px;
+    color: white;
   }
-
-  .icon-counter {
-    display: inline-block;
-    min-width: 50px;
-    text-align: center;
+  h3 {
+    color: black;
   }
 }
 </style>

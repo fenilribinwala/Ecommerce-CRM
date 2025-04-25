@@ -199,23 +199,21 @@
                 :options="countryOptions"
                 size="sm"
                 :state="countryState"
+                name="country"
+                id="country"
               ></b-form-select>
-              <b-form-invalid-feedback id="stateFeedback">
+              <b-form-invalid-feedback id="countryFeedback">
                 <!-- This will only be shown if the preceeding input has an invalid state -->
-                Please select a country
+                The country cannot be empty.
               </b-form-invalid-feedback>
             </b-form-group>
           </b-col>
         </b-row>
 
         <div class="action-buttons">
-          <b-button
-            size="sm"
-            class="cancel-btn"
-            variant="secondary"
-            @click="cancelForm()"
-          >Cancel</b-button>
-          <b-button size="sm" @click="saveAddress()" variant="primary">Save</b-button>
+          <b-button variant="secondary-button" class="cancel-btn" @click="cancelForm()">Cancel</b-button>
+          <b-button class="primary-button" v-if="!isUpdate" @click="saveAddress()">Save</b-button>
+          <b-button class="primary-button" v-else @click="saveAddress()">Edit</b-button>
         </div>
       </div>
     </transition>
@@ -349,7 +347,7 @@ async function saveAddress() {
       shippingDeet[key] = '';
     }
   });
-  
+
   if (
     firstNameState.value &&
     address1State.value &&

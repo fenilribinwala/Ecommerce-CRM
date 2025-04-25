@@ -11,15 +11,15 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 import axios from 'axios';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { 
-  faShoppingCart, 
-  faSignInAlt, 
-  faUserPlus, 
-  faSignOutAlt, 
-  faUser, 
-  faChevronDown, 
-  faChevronUp, 
-  faPlus, 
+import {
+  faShoppingCart,
+  faSignInAlt,
+  faUserPlus,
+  faSignOutAlt,
+  faUser,
+  faChevronDown,
+  faChevronUp,
+  faPlus,
   faMinus,
   faTimes,
   faTrash
@@ -33,14 +33,14 @@ import Config from '@/config.json';
 
 // Setup FontAwesome icons
 library.add(
-  faShoppingCart, 
-  faSignInAlt, 
-  faUserPlus, 
-  faSignOutAlt, 
-  faUser, 
-  faChevronDown, 
-  faChevronUp, 
-  faPlus, 
+  faShoppingCart,
+  faSignInAlt,
+  faUserPlus,
+  faSignOutAlt,
+  faUser,
+  faChevronDown,
+  faChevronUp,
+  faPlus,
   faMinus,
   faTimes,
   faTrash
