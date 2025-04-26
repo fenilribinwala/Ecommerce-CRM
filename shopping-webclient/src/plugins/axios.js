@@ -3,7 +3,7 @@ import axios from 'axios';
 import { eventHub } from '@/utils/EventHub';
 import { SilentUrls } from '../constants/Constants';
 
-const baseURL = process.env.VUE_APP_API_BASE_URL;
+const baseURL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:4201';
 
 const instance = axios.create({
   baseURL,

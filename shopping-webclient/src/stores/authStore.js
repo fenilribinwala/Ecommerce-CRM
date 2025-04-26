@@ -4,15 +4,16 @@ import router from '../routers/router';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
+    email: '',
+    name: '',
     isSessionActive: false,
+    emailConfirmed: false,
   }),
-  
+
   getters: {
-    getUser: (state) => state.user,
-    isSessionActive: (state) => state.isSessionActive,
+    getFirstName: (state) => (state.name ? state.name.split(' ')[0] : '')
   },
-  
+
   actions: {
     async initiateAppSession() {
       try {
@@ -29,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
         return false;
       }
     },
-    
+
     async login(payload) {
       try {
         const response = await axios.post('/api/customer/login', payload);
@@ -41,7 +42,7 @@ export const useAuthStore = defineStore('auth', {
         throw error;
       }
     },
-    
+
     async signup(payload) {
       try {
         const response = await axios.post('/api/customer/signup', payload);
@@ -50,7 +51,7 @@ export const useAuthStore = defineStore('auth', {
         throw error;
       }
     },
-    
+
     async logout() {
       try {
         await axios.post('/api/customer/logout');
@@ -61,14 +62,14 @@ export const useAuthStore = defineStore('auth', {
         router.push('/login');
       }
     },
-    
+
     logoutUser() {
       this.user = null;
       this.isSessionActive = false;
       localStorage.removeItem('email');
     }
   },
-  
+
   persist: {
     key: 'auth',
     storage: localStorage,

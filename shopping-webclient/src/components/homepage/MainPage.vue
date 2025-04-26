@@ -3,7 +3,7 @@
     <div class="main-bg"></div>
     <h1 class="featured-title">SPRING 2019 COLLECTION</h1>
     <div v-for="(design, did) in featuredDesigns" :key="did" class="designs">
-      <design-entry :design="design" @shop="gotoProduct"/>
+      <DesignEntry :design="design" @shop="gotoProduct"/>
     </div>
     <h1 class="featured-title">Hottest Trends</h1>
     <FeaturedStripe/>

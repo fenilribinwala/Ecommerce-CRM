@@ -50,7 +50,7 @@ const products = ref([
   {
     name: 'Shaped Tee',
     price: '$77.00',
-    url: 'https://www.forever21.com/images/default_330/00329137-02.jpg',
+    url: 'https://assets.myntassets.com/f_webp,dpr_2.0,q_60,w_210,c_limit,fl_progressive/assets/images/16809254/2022/7/28/40d9c4b8-9782-4e96-8c53-e545d1956e491658987189881-FOREVER-21-Men-Tshirts-3381658987189442-1.jpg',
   },
 ]);
 </script>

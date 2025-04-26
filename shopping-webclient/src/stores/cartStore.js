@@ -7,13 +7,13 @@ export const useCartStore = defineStore('cart', {
     checkoutData: null,
     orderList: [],
   }),
-  
+
   getters: {
     cart: (state) => state.cartData,
     checkout: (state) => state.checkoutData,
     orders: (state) => state.orderList,
   },
-  
+
   actions: {
     async fetchCart() {
       try {
@@ -24,7 +24,7 @@ export const useCartStore = defineStore('cart', {
         throw error;
       }
     },
-    
+
     async addToTheCart(payload) {
       try {
         const response = await axios.post('/api/customer/cart', payload);
@@ -34,7 +34,7 @@ export const useCartStore = defineStore('cart', {
         throw error;
       }
     },
-    
+
     async createCheckout(payload) {
       try {
         const response = await axios.post('/api/customer/checkout', payload);
@@ -44,7 +44,7 @@ export const useCartStore = defineStore('cart', {
         throw error;
       }
     },
-    
+
     async fetchOrders() {
       try {
         const response = await axios.get('/api/customer/orders');
@@ -54,14 +54,14 @@ export const useCartStore = defineStore('cart', {
         throw error;
       }
     },
-    
+
     resetOrders() {
       this.orderList = [];
       this.cartData = {};
       this.checkoutData = null;
     }
   },
-  
+
   persist: {
     key: 'cart',
     storage: localStorage,
