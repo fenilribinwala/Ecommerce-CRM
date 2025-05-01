@@ -1,13 +1,10 @@
-FROM node:22.14-alpine
+FROM mhart/alpine-node:8
 
 WORKDIR /app
 
-# Add build dependencies
-RUN apk add --no-cache python3 make g++ git
-
 COPY package*.json /app/
 
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY . /app/
 
