@@ -49,7 +49,7 @@ library.add(
 );
 
 // Configure axios defaults
-axios.defaults.baseURL = process.env.VUE_APP_API_URL;
+axios.defaults.baseURL = 'http://localhost:4201';
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Create Pinia store

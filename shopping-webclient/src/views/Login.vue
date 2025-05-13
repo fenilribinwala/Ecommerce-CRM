@@ -3,39 +3,36 @@
     <div class="login">
       <div class="content">
         <div class="auth-box">
-          <user-account-modal @loginSuccess="loggedIn()"></user-account-modal>
+          <user-account-modal @loginSuccess="loggedIn"></user-account-modal>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useLoaderStore } from '@/stores/loaderStore'; // Assuming a Pinia loader store
 import UserAccountModal from '@/components/registrations/UserAccountModal.vue';
 
-export default {
-  name: 'Login',
-  components: {
-    UserAccountModal,
-  },
+// Component name for debugging (optional in Vue 3)
+defineOptions({
+  name: 'Login'
+});
 
-  data() {
-    return {
-      registrationClass: ['registration-mode'],
-      userLoggedIn: false,
-    };
-  },
+const registrationClass = ref(['registration-mode']);
+const userLoggedIn = ref(false);
 
-  methods: {
-    loggedIn() {
-      // Do something when logged in.
-      const previousPath = this.$route.query.previousPath ? this.$route.query.previousPath : null;
+const router = useRouter();
+const route = useRoute();
+const loaderStore = useLoaderStore();
 
-      this.$router.push(previousPath || '/');
-
-      this.$store.commit('loaderStore/unsetLoader');
-    },
-  },
+const loggedIn = () => {
+  // Do something when logged in
+  const previousPath = route.query.previousPath || null;
+  router.push(previousPath || '/');
+  loaderStore.unsetLoader(); // Using Pinia store action
 };
 </script>
 

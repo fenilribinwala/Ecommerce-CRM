@@ -3,16 +3,18 @@ import axios from 'axios';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    cartData: {},
-    checkoutData: null,
-    orderList: [],
+    cart: [],
+    totalPrice: {},
+    totalWeight: {},
+    subTotalPrice: {},
+    serviceCharge: {},
+    shippingPrice: {},
+    tariffPrice: {},
+    checkoutInitiated: false,
+    checkoutID: null
   }),
 
-  getters: {
-    cart: (state) => state.cartData,
-    checkout: (state) => state.checkoutData,
-    orders: (state) => state.orderList,
-  },
+  getters: {},
 
   actions: {
     async fetchCart() {

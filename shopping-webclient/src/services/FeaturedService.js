@@ -1,4 +1,5 @@
-import Vue from 'vue';
+// import Vue from 'vue';
+import axios from 'axios';
 import ProxyUrls from '@/constants/ProxyUrls';
 
 /**
@@ -14,7 +15,7 @@ export default {
    */
   async getFeatureListFor(section) {
     try {
-      const { data } = await Vue.prototype.$axios({
+      const { data } = await axios({
         url: `${ProxyUrls.featuredUrl}${section}`,
         method: 'get',
       });

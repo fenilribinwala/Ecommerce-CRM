@@ -1,48 +1,66 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import ProductDTO from '@/dto/Products.json';
+import ProxyUrls from "../constants/ProxyUrls";
 
 export const useSearchStore = defineStore('searchStore', {
   state: () => ({
-    _searchResult: [],
-    loading: false,
-    error: null
+    searchTerm: '',
+    searchResult: []
   }),
 
-  getters: {
-    searchResult: (state) => state._searchResult,
-    isLoading: (state) => state.loading,
-    getError: (state) => state.error
-  },
+  getters: {},
 
   actions: {
-    async searchForProduct(payload) {
-      try {
-        this.loading = true;
-        const response = await axios.post('/api/catalog/search', payload);
-        if (response.data.status) {
-          this._searchResult = [...this._searchResult, ...response.data.data.products];
-          return response.data.data.paging;
-        } else {
-          this.error = response.data.errorDetails || 'Failed to search products';
-          return payload.paging;
-        }
-      } catch (error) {
-        this.error = error.message;
-        return payload.paging;
-      } finally {
-        this.loading = false;
-      }
+
+    setSearchTerm(payload) {
+      this.searchTerm = payload;
+    },
+
+    setSearchResult(payload) {
+      // this.searchResult.splice(0, this.searchResult.length);
+      this.searchResult.push(...payload);
     },
 
     resetStore() {
-      this._searchResult = [];
-      this.error = null;
+      this.searchResult = [];
+    },
+    async searchForProduct(payload) {
+      try {
+        const { data } = await axios({
+          url: ProxyUrls.searchProduct,
+          method: 'post',
+          data: {
+            searchTerm: payload.term,
+            categoryIds: payload.subcategories,
+            pagingOptions: payload.paging
+          }
+        });
+
+        if (data && data.httpStatus === 200) {
+          const transformed = [];
+          data.responseData.docs.forEach(p => {
+            transformed.push(_.assign(_.cloneDeep(ProductDTO), p));
+          });
+
+          this.setSearchResult(transformed);
+
+          return {
+            total: data.responseData.total,
+            pages: data.responseData.pages
+          };
+        }
+        throw new Error('result error');
+      } catch (err) {
+        console.log('Error', err);
+        throw err;
+      }
     }
   },
 
-  persist: {
-    key: 'searchStore',
-    storage: localStorage,
-    paths: ['_searchResult']
-  }
+  // persist: {
+  //   key: 'searchStore',
+  //   storage: localStorage,
+  //   paths: ['_searchResult']
+  // }
 });

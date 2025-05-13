@@ -1,67 +1,44 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import _ from 'lodash';
+import ProxyUrls from "../constants/ProxyUrls";
 
 export const useCategoryStore = defineStore('categoryStore', {
   state: () => ({
-    categoryList: [],
     categories: {},
     masterList: [],
-    loading: false,
-    error: null
   }),
-  
-  getters: {
-    categories: (state) => state.categories,
-    masterList: (state) => state.masterList,
-  },
-  
+
+  getters: {},
+
   actions: {
     async getCategoriesData() {
       try {
-        this.loading = true;
-        const response = await axios.get('/api/catalog/categories');
-        if (response.data.status) {
-          this.masterList = response.data.data;
-          this.processCategories();
-        } else {
-          this.error = response.data.errorDetails || 'Failed to fetch categories';
+        const { data } = await axios({
+          url: ProxyUrls.categoriesUrl,
+          method: 'get',
+        });
+
+        if (data && data.httpStatus === 200) {
+          const groups = _.mapValues(_.groupBy(data.responseData, 'category'));
+          console.log('Categories Data', groups);
+
+          // In Pinia, we directly update state in actions
+          this.categories = groups;
+          this.masterList = data.responseData;
         }
-        return response.data.data;
-      } catch (error) {
-        this.error = error.message;
-        return [];
-      } finally {
-        this.loading = false;
+
+        return false;
+      } catch (err) {
+        console.log('Error', err);
+        throw err;
       }
     },
-    
-    processCategories() {
-      // Process the raw data into hierarchical structure for UI
-      const categories = {};
-      
-      _.forEach(this.masterList, (item) => {
-        if (!categories[item.category]) {
-          categories[item.category] = [];
-        }
-        
-        categories[item.category].push(item);
-      });
-      
-      this.categories = categories;
-    },
-    
-    resetStore() {
-      this.categoryList = [];
-      this.categories = {};
-      this.masterList = [];
-      this.error = null;
-    }
   },
-  
-  persist: {
-    key: 'categoryStore',
-    storage: localStorage,
-    paths: ['categories', 'masterList']
-  }
+
+  // persist: {
+  //   key: 'categoryStore',
+  //   storage: localStorage,
+  //   paths: ['categories', 'masterList']
+  // }
 });
