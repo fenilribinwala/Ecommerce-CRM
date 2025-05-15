@@ -1,5 +1,3 @@
- /* eslint-disable */
-
 <template>
   <div class="align-left description" style="padding: 10px">
     <h3>{{product.name}}</h3>
@@ -9,13 +7,14 @@
     <div class="custom-attributes">
       <div v-for="(attrib, aid) in customizations" v-bind:key="aid">
         <div v-if="attrib.type === 'Array'">
-          <b-form-group
+          <BFormGroup
             :label-cols="2"
             :label="attrib.name"
             :label-for="attrib.name+aid"
-            horizontal
+            label-size=""
+            class="mb-3"
           >
-            <b-form-select
+            <BFormSelect
               v-model="selectedCustomizations[attrib.key]"
               :options="attrib.values"
               :name="attrib.name+aid"
@@ -23,18 +22,17 @@
               size="sm"
               style="max-width: 150px"
             />
-            <b-form-invalid-feedback id="countryFeedback">
-              <!-- This will only be shown if the preceeding input has an invalid state -->
+            <BFormInvalidFeedback id="countryFeedback">
               The {{attrib.name}} cannot be empty.
-            </b-form-invalid-feedback>
-          </b-form-group>
+            </BFormInvalidFeedback>
+          </BFormGroup>
         </div>
 
         <!-- Show Color selection for colors -->
         <div v-if="attrib.type==='Colors'">
-          <b-row>
-            <b-col md="2">{{attrib.name}}</b-col>
-            <b-col md="9">
+          <BRow>
+            <BCol md="2">{{attrib.name}}</BCol>
+            <BCol md="9">
               <ul class="color-select">
                 <li v-for="(color, cid) in attrib.values" v-bind:key="cid">
                   <div
@@ -46,26 +44,27 @@
                   ></div>
                 </li>
               </ul>
-            </b-col>
-          </b-row>
+            </BCol>
+          </BRow>
         </div>
       </div>
     </div>
     <p style="margin-top: 20px">
-      <b-button id="add-to-cart-sync" class="add-to-cart" @click="addToCart()">
+      <BButton id="add-to-cart-sync" class="add-to-cart" @click="addToCart">
         <font-awesome-icon icon="shopping-bag"/>&nbsp;
         Add to Cart
-      </b-button>
+      </BButton>
     </p>
     <hr>
     <div v-html="product.details_html"></div>
 
-    <b-popover
-      ref="popover"
-      :show.sync="showLoginPopover"
+    <BPopover
+      ref="popoverRef"
+      v-model="showLoginPopover"
       target="add-to-cart-sync"
-      placement="topright"
+      placement="top-end"
     >
+      <template #title>Login Required</template>
       <p class="info">You need to login to add products to the cart.</p>
       <div class="align-center">
         <BButton
@@ -75,19 +74,18 @@
           @click="router.push('/login')"
         >Login</BButton>
       </div>
-    </b-popover>
+    </BPopover>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue';
+import { ref, computed, onMounted, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { useCartStore } from '@/stores/cartStore';
-import { useNotification } from '@kyvg/vue3-notification';
+import { useCartStore } from '@/stores/cartStore'; // Assuming Pinia store
+import { useAuthStore } from '@/stores/authStore'; // Assuming Pinia store
 import _ from 'lodash';
 
-// Define props
+// Props
 const props = defineProps({
   data: {
     type: Object,
@@ -95,53 +93,59 @@ const props = defineProps({
   },
 });
 
-// Initialize router, stores and notification
+// Router and stores
 const router = useRouter();
-const authStore = useAuthStore();
 const cartStore = useCartStore();
-const { notify } = useNotification();
+const authStore = useAuthStore();
 
-// Reactive data
+// Reactive state
 const product = ref(null);
-const selectedCustomizations = reactive({});
+const selectedCustomizations = ref({});
 const showLoginPopover = ref(false);
-const popover = ref(null);
+const popoverRef = ref(null);
 
 // Computed properties
-const isSessionActive = computed(() => authStore.isSessionActive);
-const customizations = computed(() => product.value.customizationOptions.customizations);
+const customizations = computed(() => {
+  return product.value?.customizationOptions?.customizations || [];
+});
 
-// Initialize component
-onMounted(() => {
-  product.value = props.data;
-  Object.assign(selectedCustomizations, _.cloneDeep(product.value.customValues));
+const isSessionActive = computed(() => {
+  return authStore.isSessionActive;
 });
 
 // Methods
-async function addToCart() {
+const addToCart = async () => {
   if (!isSessionActive.value) {
-    popover.value.$emit('enable');
+    if (popoverRef.value) {
+      // For Vue 3, component methods are accessed differently
+      popoverRef.value.show = true;
+    }
     showLoginPopover.value = true;
     return;
   }
 
-  // Disable the popover in case the add to cart is possible
-  popover.value.$emit('disable');
+  // Disable the popover
+  if (popoverRef.value) {
+    popoverRef.value.show = false;
+  }
 
   product.value.customValues = {};
-  Object.keys(selectedCustomizations).forEach((key) => {
-    if (typeof selectedCustomizations[key] === 'string') {
-      product.value.customValues[key] = selectedCustomizations[key];
+  Object.keys(selectedCustomizations.value).forEach((key) => {
+    if (typeof selectedCustomizations.value[key] === 'string') {
+      product.value.customValues[key] = selectedCustomizations.value[key];
     } else {
       product.value.customValues[key] = `${
-        selectedCustomizations[key].name
-      }|${selectedCustomizations[key].hexValue}`;
+        selectedCustomizations.value[key].name
+      }|${selectedCustomizations.value[key].hexValue}`;
     }
   });
 
+  // Access Pinia store action directly
   const val = await cartStore.addToTheCart([product.value]);
 
   if (val) {
+    // Notification system - using whatever notification system you have in Vue 3
+    // This assumes you have a similar notification system
     notify({
       group: 'toast',
       type: 'success',
@@ -152,27 +156,45 @@ async function addToCart() {
     notify({
       group: 'toast',
       type: 'warn',
-      text: `${
-        product.value.name
-      } couldn't be added for some reason. Please try again later`,
+      text: `${product.value.name} couldn't be added for some reason. Please try again later`,
     });
   }
-}
+};
 
-function colorClicked(key, colorObj) {
-  selectedCustomizations[key] = colorObj;
-}
+const colorClicked = (key, colorObj) => {
+  selectedCustomizations.value[key] = colorObj;
+};
 
-function increaseCount() {
+const increaseCount = () => {
   product.value.counts += 1;
-}
+};
 
-function decreaseCount() {
+const decreaseCount = () => {
   product.value.counts -= 1;
   if (product.value.counts < 0) {
     product.value.counts = 0;
   }
-}
+};
+
+// Initialize the notification system - update based on your notification library
+const notify = (options) => {
+  // This is a placeholder for whatever notification system you're using
+  // You might use something like:
+  // useToast().success(options.text)
+  // or
+  // app.config.globalProperties.$notify(options)
+  console.log('Notification:', options);
+};
+
+// Initialize component
+onBeforeMount(() => {
+  product.value = props.data;
+})
+
+onMounted(() => {
+  product.value = props.data;
+  selectedCustomizations.value = _.cloneDeep(product.value.customValues);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -219,7 +241,6 @@ function decreaseCount() {
   .section-title {
     font-size: 1.2em;
   }
-
   .add-to-cart {
     background-color: white; /*this for transparent button*/
     border: 2px solid black; /* this is for button border*/

@@ -62,7 +62,7 @@ const routes = [
         props: true,
       },
       {
-        path: 'products/:productId',
+        path: 'product/:productId',
         component: () => import('@/views/ProductDetail.vue'),
         props: true,
       },
@@ -83,7 +83,7 @@ const routes = [
     component: Login,
   },
   {
-    path: '/:pathMatch(.*)*',
+    path: '/*',
     name: 'PageNotFound',
     component: PageNotFound,
   },

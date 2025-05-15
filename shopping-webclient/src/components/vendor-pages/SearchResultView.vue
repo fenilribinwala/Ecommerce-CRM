@@ -4,8 +4,8 @@
     <br>
     <p class="align-left bcrumb">Shop &nbsp; / &nbsp; {{title}}</p>
     <br>
-    <b-row>
-      <b-col md="2" class="beginner align-left">
+    <BRow>
+      <BCol md="2" class="beginner align-left">
         <div class="d-none d-md-block">
           <side-menu-view
             :sidebar="menu"
@@ -14,8 +14,8 @@
             :term="term"
           ></side-menu-view>
         </div>
-      </b-col>
-      <b-col md="10">
+      </BCol>
+      <BCol md="10">
         <div v-if="data && data.length > 0">
           <div class="product-card align-center" v-for="(product, pid) in data" v-bind:key="pid">
             <div class="link" @click="openProductDetail(product._id)">
@@ -60,8 +60,8 @@
         <div v-else>
           <div class="info" style="font-size: 50px">No result found ...</div>
         </div>
-      </b-col>
-    </b-row>
+      </BCol>
+    </BRow>
   </div>
 </template>
 

@@ -6,7 +6,7 @@ import Notifications from '@kyvg/vue3-notification';
 import VueScrollTo from 'vue-scrollto';
 import { LoadingPlugin } from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
-import BootstrapVue3 from 'bootstrap-vue-3';
+import {BootstrapVue3, vTooltip} from 'bootstrap-vue-3';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 import axios from 'axios';
@@ -23,7 +23,10 @@ import {
   faMinus,
   faTimes,
   faTrash,
-  faSearch
+  faSearch,
+  faChevronCircleUp,
+  faChevronCircleDown,
+  faShoppingBag,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { VueReCaptcha } from 'vue-recaptcha-v3';
@@ -45,7 +48,10 @@ library.add(
   faMinus,
   faTimes,
   faTrash,
-  faSearch
+  faSearch,
+  faChevronCircleUp,
+  faChevronCircleDown,
+  faShoppingBag
 );
 
 // Configure axios defaults
@@ -74,6 +80,8 @@ app.use(VueReCaptcha, {
     autoHideBadge: false
   }
 });
+
+app.directive('tooltip', vTooltip)
 
 // Provide the event bus to the entire app
 app.provide('eventBus', eventBus);
