@@ -1,71 +1,96 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axiosInstance from '../plugins/axios';
+import _ from 'lodash';
+import ProxyUrls from '../constants/ProxyUrls';
 
 export const useShippingStore = defineStore('shipping', {
   state: () => ({
-    addressList: [],
+    addresses: [],
     selectedAddress: null,
     shippingMethod: null,
   }),
-  
+
   getters: {
-    addresses: (state) => state.addressList,
-    getSelectedAddress: (state) => state.selectedAddress,
-    getShippingMethod: (state) => state.shippingMethod,
+    // allAddresses: (state) => state.addresses,
+    // getSelectedAddress: (state) => state.selectedAddress,
+    // shippingMethod: (state) => state.shippingMethod,
+    // shippingMethods: (state) => state.shippingMethods,
   },
-  
+
   actions: {
-    async fetchAddresses() {
-      try {
-        const response = await axios.get('/api/customer/address');
-        this.addressList = response.data.data.addresses;
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+    // Former mutations are now actions
+    setAddresses(adds) {
+      this.addresses.splice(0, this.addresses.length);
+      this.addresses.push(...adds);
     },
-    
-    async addressAction({ address, action }) {
-      try {
-        let response;
-        
-        if (action === 'add') {
-          response = await axios.post('/api/customer/address', address);
-        } else if (action === 'update') {
-          response = await axios.put(`/api/customer/address/${address._id}`, address);
-        } else if (action === 'delete') {
-          response = await axios.delete(`/api/customer/address/${address._id}`);
-        } else if (action === 'get') {
-          response = await this.fetchAddresses();
-        }
-        
-        if (action !== 'get') {
-          this.addressList = response.data.data.addresses;
-        }
-        
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
-    },
-    
-    setSelectedAddress(address) {
+
+    addressSelected(address) {
       this.selectedAddress = address;
     },
-    
-    setShippingMethod(method) {
-      this.shippingMethod = method;
+
+    setShippingMethod(payload) {
+      this.shippingMethod = payload;
     },
-    
+
     resetAddresses() {
-      this.addressList = [];
-      this.selectedAddress = null;
       this.shippingMethod = null;
-    }
-  },
-  
-  persist: {
-    key: 'shipping',
-    storage: localStorage,
+      this.addresses = [];
+      this.selectedAddress = null;
+    },
+
+    // Original actions
+    async addressAction({ address, action }) {
+      try {
+        let reqData = null;
+        if (action === 'post' || action === 'put') {
+          reqData = address;
+        } else if (action === 'delete') {
+          reqData = {
+            addressId: address._id,
+          };
+        }
+
+        const { data } = await axiosInstance({
+          method: action,
+          url: ProxyUrls.address,
+          data: reqData,
+        });
+
+        // Import cart store dynamically to avoid circular dependencies
+        const cartStore = await getCartStore();
+
+        if (cartStore.checkoutInitiated && action !== 'get') {
+          const reqObj = {
+            address: this.selectedAddress,
+            shippingMethod: this.shippingMethod,
+          };
+          await cartStore.createCheckout(reqObj);
+        } else if (data && data.httpStatus === 200) {
+          this.setAddresses(data.responseData);
+          console.log(
+            'Index is ',
+            _.findIndex(this.addresses, val => val._id === this.selectedAddress?._id),
+          );
+          if (
+            (this.selectedAddress === null
+              || _.findIndex(this.addresses, val => val._id === this.selectedAddress?._id) < 0)
+            && this.addresses.length > 0
+          ) {
+            this.addressSelected(this.addresses[0]);
+            console.log('Address selected', this.selectedAddress);
+          }
+        }
+        return true;
+      } catch (err) {
+        console.error('Error in addressAction:', err);
+        return false;
+      }
+    },
   },
 });
+
+// Helper function to get the cart store - prevents circular dependencies
+async function getCartStore() {
+  const cartStoreModule = await import('./cartStore');
+  return cartStoreModule.useCartStore();
+}

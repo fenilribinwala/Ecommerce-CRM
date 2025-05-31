@@ -1,13 +1,19 @@
 <template>
   <div id="app">
-    <notifications position="bottom center" classes="vue-notification main-notification" width="100%" />
-    <notifications group="toast" class="toast-noti" classes="vue-notification toast-notification" position="top right" />
-    <div class="spinner-container" v-if="isLoading">
-      <component :is="loadingComponent"
-        v-model:active="isLoading"
-        :can-cancel="false"
-        :is-full-page="true"
-        color="#136a8a" />
+    <Notifications
+      group="all"
+      classes="vue-notification main-notification"
+      width="100%"
+      position="bottom center"
+    />
+    <Notifications
+      group="toast"
+      class="toast-noti"
+      classes="vue-notification toast-notification"
+      position="top right"
+    />
+    <div v-if="isLoading" class="spinner-overlay">
+      <div class="fingerprint-spinner"></div>
     </div>
 
     <router-view/>
@@ -15,24 +21,86 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, shallowRef } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { useCartStore } from '@/stores/cartStore';
-import { useShippingStore } from '@/stores/shippingStore';
+import moment from 'moment';
+import { useAuthStore } from './stores/authStore';
+import { useCartStore } from './stores/cartStore';
+import { useShippingStore } from './stores/shippingStore';
 import eventHub from "./utils/EventHub";
 import { Loading } from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
 
+// Reactive state
+const refCount = ref(0);
+const isLoading = ref(false);
+
 const router = useRouter();
+// Initialize stores
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 const shippingStore = useShippingStore();
 const loadingComponent = shallowRef(Loading);
 
-const isLoading = ref(false);
-const sessionTimeout = ref(3600000);
-const sessionTimeoutId = ref(null);
+// Computed properties
+const isSessionActive = computed(() => authStore.isSessionActive);
+const shippingMethod = computed(() => shippingStore.shippingMethod);
+const selectedAddress = computed(() => shippingStore.getSelectedAddress);
+const checkoutInitiated = computed(() => cartStore.checkoutInitiated);
+
+// Methods
+const initiateApp = async () => {
+  try {
+    await cartStore.getCart();
+    await shippingStore.addressAction({
+      address: null,
+      action: 'get',
+    });
+
+    if (checkoutInitiated.value) {
+      const reqObj = {
+        address: selectedAddress.value,
+        shippingMethod: shippingMethod.value,
+      };
+      await cartStore.createCheckout(reqObj);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const setLoading = () => {
+  refCount.value += 1;
+  isLoading.value = true;
+};
+
+const checkSessionTimeout = () => {
+  const dt = localStorage.getItem('sessionDT');
+  if (!dt) {
+    return false;
+  }
+  const diff = moment.duration(moment().diff(moment(dt)));
+  if (diff.asMinutes() >= 30) return false;
+  localStorage.setItem('sessionDT', moment().format());
+  return true;
+};
+
+const unsetLoading = () => {
+  if (isSessionActive.value) {
+    const isActive = checkSessionTimeout();
+    if (!isActive) {
+      console.log('This is also happening while unsetting loading');
+      shippingStore.resetAddresses();
+      cartStore.resetOrders();
+      authStore.logoutUser();
+    }
+  }
+
+  if (refCount.value > 0) {
+    refCount.value -= 1;
+    isLoading.value = refCount.value > 0;
+  }
+};
 
 onMounted(async () => {
   eventHub.on('before-request', setLoading);
@@ -41,7 +109,8 @@ onMounted(async () => {
   eventHub.on('response-error', unsetLoading);
 
   await authStore.initiateAppSession();
-  if (authStore.isSessionActive) {
+
+  if (isSessionActive.value) {
     initiateApp();
   } else {
     shippingStore.resetAddresses();
@@ -49,43 +118,13 @@ onMounted(async () => {
   }
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   // Clean up event listeners
   eventHub.off('before-request', setLoading);
   eventHub.off('request-error', unsetLoading);
   eventHub.off('after-response', unsetLoading);
   eventHub.off('response-error', unsetLoading);
-
-  // Clear any timeouts
-  if (sessionTimeoutId.value) {
-    clearTimeout(sessionTimeoutId.value);
-  }
 });
-
-function initiateApp() {
-  cartStore.fetchOrders();
-  shippingStore.fetchAddresses();
-  checkSessionTimeout();
-}
-
-function setLoading() {
-  isLoading.value = true;
-  checkSessionTimeout();
-}
-
-function checkSessionTimeout() {
-  if (sessionTimeoutId.value) {
-    clearTimeout(sessionTimeoutId.value);
-  }
-  sessionTimeoutId.value = setTimeout(() => {
-    authStore.logout();
-  }, sessionTimeout.value);
-}
-
-function unsetLoading() {
-  isLoading.value = false;
-  checkSessionTimeout();
-}
 </script>
 
 <style>
@@ -135,5 +174,33 @@ body {
   width: 100% !important;
   z-index: 10000 !important;
   background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fingerprint-spinner {
+  width: 64px;
+  height: 64px;
+  border: 8px solid #136a8a;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
