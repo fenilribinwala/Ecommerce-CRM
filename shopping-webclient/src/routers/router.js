@@ -83,7 +83,7 @@ const routes = [
     component: Login,
   },
   {
-    path: '/*',
+    path: '/:pathMatch(.*)*',
     name: 'PageNotFound',
     component: PageNotFound,
   },
