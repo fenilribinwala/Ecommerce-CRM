@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
 import ProxyUrls from "../constants/ProxyUrls";
+import axiosInstance from "../plugins/axios";
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', {
     async registerUser(payload) {
       if (!payload) return null;
       try {
-        const { data } = await axios({
+        const { data } = await axiosInstance({
           method: 'post',
           url: ProxyUrls.registerUrl,
           data: payload,
@@ -44,7 +44,7 @@ export const useAuthStore = defineStore('auth', {
     async login(payload) {
       if (!payload) return null;
       try {
-        const { data } = await axios({
+        const { data } = await axiosInstance({
           method: 'post',
           url: ProxyUrls.loginUrl,
           data: payload,
@@ -63,7 +63,7 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        const { data } = await axios({
+        const { data } = await axiosInstance({
           method: 'get',
           url: ProxyUrls.logoutUrl,
         });
@@ -77,10 +77,10 @@ export const useAuthStore = defineStore('auth', {
 
     async initiateAppSession() {
       try {
-        const res = await axios({
+        const res = await axiosInstance({
           method: 'get',
           url: ProxyUrls.isSessionActive,
-        });
+        }, { withCredentials: true });
         if (res && res.data === true) {
           this.setEmail(localStorage.getItem('email'));
           this.setName(localStorage.getItem('name'));
@@ -115,6 +115,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setSessionActive(val) {
+      console.log('==> setSessionActive', val);
       this.isSessionActive = val;
       if (!val) {
         localStorage.removeItem('email');

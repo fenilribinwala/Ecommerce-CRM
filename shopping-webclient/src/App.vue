@@ -20,7 +20,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useShippingStore } from '@/stores/shippingStore';
-import { eventBus } from '@/utils/EventHub';
+import eventHub from "./utils/EventHub";
 import { Loading } from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
 
@@ -35,10 +35,10 @@ const sessionTimeout = ref(3600000);
 const sessionTimeoutId = ref(null);
 
 onMounted(async () => {
-  eventBus.on('before-request', setLoading);
-  eventBus.on('request-error', unsetLoading);
-  eventBus.on('after-response', unsetLoading);
-  eventBus.on('response-error', unsetLoading);
+  eventHub.on('before-request', setLoading);
+  eventHub.on('request-error', unsetLoading);
+  eventHub.on('after-response', unsetLoading);
+  eventHub.on('response-error', unsetLoading);
 
   await authStore.initiateAppSession();
   if (authStore.isSessionActive) {
@@ -51,10 +51,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   // Clean up event listeners
-  eventBus.off('before-request', setLoading);
-  eventBus.off('request-error', unsetLoading);
-  eventBus.off('after-response', unsetLoading);
-  eventBus.off('response-error', unsetLoading);
+  eventHub.off('before-request', setLoading);
+  eventHub.off('request-error', unsetLoading);
+  eventHub.off('after-response', unsetLoading);
+  eventHub.off('response-error', unsetLoading);
 
   // Clear any timeouts
   if (sessionTimeoutId.value) {

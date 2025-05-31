@@ -32,7 +32,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { VueReCaptcha } from 'vue-recaptcha-v3';
 import App from './App.vue';
 import router from './routers/router';
-import { eventBus } from './utils/EventHub';
+import { eventHub } from './utils/EventHub';
 import Config from '@/config.json';
 
 // Setup FontAwesome icons
@@ -84,7 +84,7 @@ app.use(VueReCaptcha, {
 app.directive('tooltip', vTooltip)
 
 // Provide the event bus to the entire app
-app.provide('eventBus', eventBus);
+app.provide('eventHub', eventHub);
 
 // Mount the app
 app.mount('#app');
