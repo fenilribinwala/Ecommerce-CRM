@@ -7,22 +7,21 @@
     <BRow>
       <BCol md="2" class="beginner align-left">
         <div class="d-none d-md-block">
-          <side-menu-view
+          <SideMenuView
             :sidebar="menu"
             :category="category"
             :subCategory="subCategory"
             :term="term"
-          ></side-menu-view>
+          ></SideMenuView>
         </div>
       </BCol>
       <BCol md="10">
         <div v-if="data && data.length > 0">
           <div class="product-card align-center" v-for="(product, pid) in data" v-bind:key="pid">
             <div class="link" @click="openProductDetail(product._id)">
-              <div class="img-parent" v-if="product && product.thumbnailUrls && product.thumbnailUrls.length > 0">
+              <div class="img-parent" v-if="product.thumbnailUrls.length > 0">
                 <search-result-view-image :product="product"/>
               </div>
-
               <p
                 v-else
                 style="font-size: 5em; padding: 10px 0px; text-align: center; color: #bdbdbd"
@@ -34,15 +33,14 @@
                 <p class="title">{{product.name}}</p>
                 <p>
                   <span
-                    v-if="product.marked_price && product.price && product.marked_price.amount > product.price.amount"
+                    v-if="product.marked_price && product.marked_price.amount > product.price.amount"
                   >
                     <strong
                       class="underline"
                       style="color: red"
                     >{{product.marked_price.currency}} {{product.marked_price.amount}}</strong>&nbsp;&nbsp;
                   </span>
-
-                  <strong v-if="product.price">
+                  <strong>
                     <span>{{product.price.currency}} {{product.price.amount}}</span>
                   </strong>
                 </p>
@@ -52,8 +50,8 @@
           <div class="align-center">
             <BButton
               class="primary-button"
-              @click="loadMoreProducts()"
-              v-show="data.length < paging.total"
+              @click="loadMoreProducts"
+              v-show="data.length < paging?.total"
             >See More</BButton>
           </div>
         </div>
@@ -66,12 +64,10 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
-import SearchResultViewImage from '@/components/vendor-pages/SearchResultViewImage.vue';
-import SideMenuView from '@/components/vendor-pages/SideMenuView.vue';
-
-// Initialize router
-const router = useRouter();
+import {useRouter} from 'vue-router';
+import SearchResultViewImage from './SearchResultViewImage.vue';
+import SideMenuView from './SideMenuView.vue';
+import {BRow, BCol, BButton} from 'bootstrap-vue-3';
 
 // Define props
 const props = defineProps({
@@ -85,7 +81,6 @@ const props = defineProps({
   },
   menu: {
     required: true,
-    default: () => ({}),
   },
   term: {
     required: false,
@@ -104,32 +99,33 @@ const props = defineProps({
   },
   paging: {
     required: false,
-    default: () => ({}),
+    default: null,
+    type: Object,
   },
 });
 
 // Define emits
 const emit = defineEmits(['nextpage']);
 
+// Initialize router
+const router = useRouter();
+
 // Methods
-function getPictureStyle(img) {
-  if (!img || img.length <= 0) {
-    return {
-      backgroundImage: 'url(/static/no-image.jpg)',
-    };
-  }
+const getPictureStyle = (img) => {
   return {
-    backgroundImage: `url(${img})`,
+    'background-image': `url(${img})`,
+    'background-size': 'cover',
+    'margin-bottom': '10px',
   };
-}
+};
 
-function openProductDetail(pid) {
+const openProductDetail = (pid) => {
   router.push(`/product/${pid}`);
-}
+};
 
-function loadMoreProducts() {
+const loadMoreProducts = () => {
   emit('nextpage');
-}
+};
 </script>
 
 <style lang="scss">
@@ -147,25 +143,19 @@ function loadMoreProducts() {
 
 .product-card {
   display: inline-block;
-  // box-shadow: 3px 4px 5px 0px #ccc;
-  // background-color: white;
   border-radius: 0px;
   margin: 20px 20px 30px 0px;
   width: 225px;
 
-  // &:hover .img-cls {
-  //   transform: scale(1.2);
-  //   transition: all 0.5s;
-  // }
-
   .img-parent {
     height: 300px;
     width: 225px;
-  overflow: hidden;
+    overflow: hidden;
   }
 
   .product-card-desc {
     margin-top: 0.5em;
+
     .title {
       height: 2em;
       text-overflow: ellipsis;
@@ -174,26 +164,27 @@ function loadMoreProducts() {
 
     .price {
       font-weight: bold;
+    }
   }
-}
 
   .link {
     cursor: pointer;
-}
+  }
+
   p {
     padding: 3px 5px;
-  margin: 0px;
-}
+    margin: 0px;
+  }
 }
 
 .bcrumb {
   font-size: 0.75em;
 }
+
 .product-detail {
   width: 90%;
   margin-left: auto;
   margin-right: auto;
-
   margin-bottom: 10px;
 }
 </style>

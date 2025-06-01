@@ -1,7 +1,7 @@
 <template>
   <div>
-    <ul v-show="sidebar && Object.keys(sidebar).length > 0">
-      <li v-for="(product, pkey) in sidebar || {}" v-bind:key="pkey">
+    <ul v-show="Object.keys(sidebar).length > 0">
+      <li v-for="(product, pkey) in sidebar" v-bind:key="pkey">
         <div v-if="product && product.length > 0 && shouldProductDisplay(pkey, product)">
           <span style="font-size:large">
             <strong>{{product[0].category}}</strong>
@@ -30,7 +30,6 @@ import _ from 'lodash';
 const props = defineProps({
   sidebar: {
     required: true,
-    default: () => ({}),
   },
   category: {
     required: false,
@@ -53,12 +52,7 @@ const props = defineProps({
 const router = useRouter();
 
 // Methods
-function openSubCategory(subcat, keyy) {
-  const q = {};
-  if (props.term) q.term = props.term;
-  q.category = props.category;
-  q.subCategory = subcat.subcategory;
-
+const openSubCategory = (subcat, keyy) => {
   router.push({
     path: '/search',
     query: {
@@ -67,9 +61,9 @@ function openSubCategory(subcat, keyy) {
       subCategory: subcat.subcategory,
     },
   });
-}
+};
 
-function shouldProductDisplay(catgry, subcats) {
+const shouldProductDisplay = (catgry, subcats) => {
   if (props.category.length <= 0) {
     if (
       props.subCategory.length > 0
@@ -82,11 +76,11 @@ function shouldProductDisplay(catgry, subcats) {
   }
   if (props.category === catgry) return true;
   return false;
-}
+};
 
-function activeSubCategory(subCat) {
+const activeSubCategory = (subCat) => {
   return subCat === props.subCategory;
-}
+};
 </script>
 
 <style lang="scss">
@@ -101,9 +95,8 @@ a {
 li {
   margin-bottom: 5px;
   margin-top: 5px;
-  }
-
-  .bold {
+}
+.bold {
   font-weight: bold;
 }
 </style>

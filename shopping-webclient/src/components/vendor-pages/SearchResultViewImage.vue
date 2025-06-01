@@ -1,46 +1,40 @@
 <template>
   <div id="search-result-view-image">
     <img v-show="!isHover" class="img-cls"
-         @mouseover="isHover = true" :src="product.thumbnailUrls[0]"/>
+         @mouseover="isHover = true" :src="product?.thumbnailUrls[0]"/>
     <img v-show="isHover" class="img-cls"
          @mouseleave="isHover = false"
-         :src="product.thumbnailUrls.length > 1 ? product.thumbnailUrls[1] : product.thumbnailUrls[0]" >
+         :src="product?.thumbnailUrls.length > 1 ? product?.thumbnailUrls[1] : product?.thumbnailUrls[0]" >
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SearchResultViewImage',
-  props: {
-    product: {
-      type: Object,
-      required: true,
-    },
-  },
+<script setup>
+import { ref } from 'vue';
 
-  data() {
-    return {
-      isHover: false,
-    };
+// Define props
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true,
   },
+});
 
-  methods: {
-    getPictureStyle() {
-      let picture = this.product.thumbnailUrls[0];
+// Reactive state
+const isHover = ref(false);
 
-      if (this.isHover && this.product.thumbnailUrls.length > 1) {
-        // eslint-disable-next-line prefer-destructuring
-        picture = this.product.thumbnailUrls[1];
-      }
-      return {
-        'background-image': `url(${picture})`,
-        'background-size': 'cover',
-        // width: 'auto',
-        // height: '350px',
-        'margin-bottom': '10px',
-      };
-    },
-  },
+// Methods
+const getPictureStyle = () => {
+  let picture = props.product.thumbnailUrls[0];
+
+  if (isHover.value && props.product.thumbnailUrls.length > 1) {
+    // eslint-disable-next-line prefer-destructuring
+    picture = props.product.thumbnailUrls[1];
+  }
+  return {
+    'background-image': `url(${picture})`,
+    'background-size': 'cover',
+    'margin-bottom': '10px',
+  };
 };
 </script>
 
