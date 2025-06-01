@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axiosInstance from '../plugins/axios';
 import ProductDTO from '@/dto/Products.json';
 import ProxyUrls from "../constants/ProxyUrls";
 
@@ -27,7 +27,7 @@ export const useSearchStore = defineStore('searchStore', {
     },
     async searchForProduct(payload) {
       try {
-        const { data } = await axios({
+        const { data } = await axiosInstance({
           url: ProxyUrls.searchProduct,
           method: 'post',
           data: {

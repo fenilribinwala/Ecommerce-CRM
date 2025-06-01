@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axiosInstance from '../plugins/axios';
 import _ from 'lodash';
 import ProxyUrls from "../constants/ProxyUrls";
 
@@ -14,7 +14,7 @@ export const useCategoryStore = defineStore('categoryStore', {
   actions: {
     async getCategoriesData() {
       try {
-        const { data } = await axios({
+        const { data } = await axiosInstance({
           url: ProxyUrls.categoriesUrl,
           method: 'get',
         });

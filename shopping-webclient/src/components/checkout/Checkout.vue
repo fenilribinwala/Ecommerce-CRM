@@ -62,10 +62,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useShippingStore } from '@/stores/shippingStore';
+import axiosInstance from '../../plugins/axios';
 import { useNotification } from '@kyvg/vue3-notification';
 import ShippingDetail from '@/components/checkout/ShippingDetail.vue';
 import OrderDetail from '@/components/checkout/OrderDetail.vue';
@@ -129,7 +129,7 @@ async function handleCheckout() {
 
 async function resendEmailConfirmation() {
   try {
-    const { data } = await axios({
+    const { data } = await axiosInstance({
       method: 'get',
       url: ProxyUrls.resendEmailConfirmation + authStore.getEmail,
     });

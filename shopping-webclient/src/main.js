@@ -9,7 +9,6 @@ import 'vue-loading-overlay/dist/css/index.css';
 import {BootstrapVue3, vBTooltip} from 'bootstrap-vue-3';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
-import axios from 'axios';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
   faShoppingCart,
@@ -53,10 +52,6 @@ library.add(
   faChevronCircleDown,
   faShoppingBag
 );
-
-// Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:4201';
-axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Create Pinia store
 const pinia = createPinia();

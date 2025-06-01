@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import axios from 'axios';
+import axiosInstance from '../../../plugins/axios';
 import _ from 'lodash';
 import { Card, Stripe } from './index';
 import PaymentRequestDTO from './StripePaymentRequestDTO.json';
@@ -71,7 +71,7 @@ async function pay(event) {
   try {
     event.target.disabled = true;
     let checkout = checkoutId.value;
-    const { data } = await axios({
+    const { data } = await axiosInstance({
       url: ProxyUrl.stripeInstantPay,
       method: 'post',
       data: {
@@ -110,7 +110,7 @@ async function pay(event) {
                 });
                 event.target.disabled = false;
               }
-              const { data } = await axios({
+              const { data } = await axiosInstance({
                 url: ProxyUrl.stripeInstantPayment,
                 method: 'post',
                 data: {

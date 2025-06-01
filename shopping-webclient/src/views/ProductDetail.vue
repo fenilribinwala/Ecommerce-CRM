@@ -27,7 +27,7 @@ import {useNotification} from '@kyvg/vue3-notification'; // Assuming Vue 3 notif
 import ProxyUrls from '@/constants/ProxyUrls';
 import ProductImageGallery from '@/components/product-detail/ProductImageGallery.vue';
 import ProductDescription from '@/components/product-detail/ProductDescription.vue';
-import axios from 'axios';
+import axiosInstance from '../plugins/axios';
 
 // Component props
 const props = defineProps({
@@ -60,7 +60,7 @@ const {notify} = useNotification();
 const fetchProductDetails = async () => {
   if (props.productId) {
     try {
-      const {data} = await axios({
+      const {data} = await axiosInstance({
         url: ProxyUrls.getProductDefinitionUrl + props.productId,
         method: 'get', // Note: changed 'type' to 'method' which is more standard
       });

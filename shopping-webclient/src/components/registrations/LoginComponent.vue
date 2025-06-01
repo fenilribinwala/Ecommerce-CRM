@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import axiosInstance from '../../plugins/axios';
 import ProxyUrl from '@/constants/ProxyUrls';
 import Config from '@/config.json';
 
@@ -88,7 +88,7 @@ function forgetPassword() {
 
 // async function captchaValidate() {
 //   try {
-//     let {data} = await axios({
+//     let {data} = await axiosInstance({
 //       headers: {
 //         'Access-Control-Allow-Origin': '*',
 //       },
@@ -121,7 +121,7 @@ async function loginClicked() {
 async function resetPassword() {
   if (usernameState.value) {
     try {
-      const { data } = await axios({
+      const { data } = await axiosInstance({
         method: 'get',
         url: ProxyUrl.forgotPassword + username.value,
       });
