@@ -6,7 +6,7 @@ import Notifications from '@kyvg/vue3-notification';
 import VueScrollTo from 'vue-scrollto';
 import { LoadingPlugin } from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/css/index.css';
-import {BootstrapVue3, vTooltip} from 'bootstrap-vue-3';
+import {BootstrapVue3, vBTooltip} from 'bootstrap-vue-3';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
 import axios from 'axios';
@@ -81,7 +81,7 @@ app.use(VueReCaptcha, {
   }
 });
 
-app.directive('tooltip', vTooltip)
+app.directive('tooltip', vBTooltip)
 
 // Provide the event bus to the entire app
 app.provide('eventHub', eventHub);

@@ -1,8 +1,7 @@
 <template>
   <div id="cart" class="align-left">
-    <p href="javascript:void(0)" class="closebtn pointer" @click="$emit('close')">×</p>
+    <p href="javascript:void(0)" class="closebtn pointer" @click="emit('close')">×</p>
     <h4 class="align-center">Cart</h4>
-
     <div v-if="orders && orders.length <= 0" class="order-empty">
       <div class="content">
         <div>
@@ -49,7 +48,7 @@
                 size="sm"
                 v-model="item.counts"
                 :options="countOptions"
-                @change.native="updateCartItem(item)"
+                @change="updateCartItem(item)"
                 class="mb-3"
                 style="max-width: 100px"
               />
@@ -58,15 +57,13 @@
         </BRow>
       </li>
     </ul>
-
     <div class="total-line align-center bottom-action" v-if="orders && orders.length > 0">
       <BRow>
-        <!-- <hr> -->
         <BCol cols="8" class="align-left">
           <strong>Sub Total</strong>
         </BCol>
         <BCol class="align-right">
-          <strong>{{subtotal.currency}} {{parseFloat(subtotal.amount).toFixed(2)}}</strong>
+          <strong>{{subtotal?.currency}} {{parseFloat(subtotal?.amount || 0).toFixed(2)}}</strong>
         </BCol>
       </BRow>
       <br>
@@ -77,10 +74,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { useCartStore } from '@/stores/cartStore';
+import { useCartStore } from '../../stores/cartStore';
+import { useAuthStore } from '../../stores/authStore';
+import { BButton, BRow, BCol, BFormSelect } from 'bootstrap-vue-3';
 import { useNotification } from '@kyvg/vue3-notification';
 
 // Define props and emits
@@ -94,69 +92,70 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-// Initialize router, stores and notification
+// Initialize stores and router
 const router = useRouter();
-const authStore = useAuthStore();
 const cartStore = useCartStore();
+const authStore = useAuthStore();
 const { notify } = useNotification();
 
 // Reactive data
 const countOptions = ref([]);
 
-// Init data on component creation
-onMounted(() => {
-  countOptions.value = Array.from(Array(200).keys(), val => val + 1);
-});
+// Computed properties
+const orders = computed(() => cartStore.cart);
+const subtotal = computed(() => cartStore.getSubTotal);
+const isSessionActive = computed(() => authStore.isSessionActive);
 
 // Methods
-function customDisplay(val) {
+const customDisplay = (val) => {
   return val.indexOf('|') >= 0 ? val.split('|')[0] : val;
-}
+};
 
-function gotoCheckout() {
+const gotoCheckout = () => {
   if (orders.value && orders.value.length > 0) {
     router.push('/checkout');
     emit('close');
   }
-}
+};
 
-async function gotoProduct(pid) {
+const gotoProduct = async (pid) => {
   if (!pid) return;
-  router.push(`/products/${pid._id}`);
-}
+  router.push(`/product/${pid._id}`);
+};
 
-async function updateCartItem(item) {
+const updateCartItem = async (item) => {
+  await nextTick();
   if (item.counts > 0) {
     try {
       await cartStore.updateOrders([item]);
       notify({
         group: 'all',
         type: 'success',
-        text: 'The cart has been successfully updated.'
+        text: 'The cart has been successfully updated.',
       });
     } catch (err) {
-      console.log('Error', err);
+      console.error('Error', err);
       notify({
         group: 'all',
         type: 'error',
-        text: 'Cart could not be updated at the moment. Please try again later.'
+        text: 'Cart could not be updated at the moment. Please try again later.',
       });
     }
   }
-}
+};
 
-async function deleteSelected(item) {
+const deleteSelected = async (item) => {
   try {
     await cartStore.deleteOrders([item]);
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
-}
+};
 
-// Computed properties
-const orders = computed(() => cartStore.cart);
-const subtotal = computed(() => cartStore.getSubTotal);
-const isSessionActive = computed(() => authStore.isSessionActive);
+// Initialize component
+onMounted(() => {
+  countOptions.value = Array.from(Array(200).keys(), val => val + 1);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -165,11 +164,9 @@ const isSessionActive = computed(() => authStore.isSessionActive);
   h4 {
     margin-bottom: 2rem;
   }
-
   .total-line {
     padding: 0.5rem 1rem;
   }
-
   .bottom-action {
     position: absolute;
     bottom: 0;
@@ -180,14 +177,12 @@ const isSessionActive = computed(() => authStore.isSessionActive);
     padding-bottom: 2rem;
     background-color: darken(white, 5%);
   }
-
   .order-empty {
     height: 500px;
     line-height: 500px;
     color: #bdbdbd;
     font-size: 1.5em;
     text-align: center;
-
     .content {
       display: inline-block;
       vertical-align: middle;
@@ -201,25 +196,20 @@ const isSessionActive = computed(() => authStore.isSessionActive);
   width: 100%;
   max-height: 60vh;
   overflow: auto;
-
-.order-desc {
-  cursor: pointer;
-}
-
+  .order-desc {
+    cursor: pointer;
+  }
   .checkbox-item {
     padding-top: 20px;
   }
-
   li {
     padding: 10px;
     margin-bottom: 10px;
     width: 100%;
-}
-
+  }
   span {
     padding: 1rem 0px;
   }
-
   .cart-img {
     width: 100%;
     height: auto;

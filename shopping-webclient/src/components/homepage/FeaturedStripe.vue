@@ -4,8 +4,8 @@
       <BCol
         sm="2"
         v-for="(product, key) in products"
-        :key="key"
-        :style="{ backgroundImage: 'url(' + product.url + ')' }"
+        v-bind:key="key"
+        v-bind:style="{ backgroundImage: 'url(' + product?.url + ')' }"
         class="box d-flex flex-column justify-content-center align-items-center"
         href="#"
       >
@@ -20,7 +20,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { BRow, BCol } from 'bootstrap-vue-3';
 
+// Reactive data
 const products = ref([
   {
     name: 'Telly Rwer',
@@ -75,7 +77,7 @@ const products = ref([
 .description:hover {
   color: white;
   background-color: #1b1a1aad;
-  width: -webkit-fill-available;
+  width: 100%;
   -webkit-transition: background-color 500ms linear;
   -ms-transition: background-color 500ms linear;
   transition: background-color 500ms linear;

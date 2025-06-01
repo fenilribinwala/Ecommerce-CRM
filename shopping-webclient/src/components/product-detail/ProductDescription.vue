@@ -1,9 +1,8 @@
 <template>
   <div class="align-left description" style="padding: 10px">
-    <h3>{{product.name}}</h3>
-    <h6>By {{product.store}}</h6>
-
-    <h4>{{product.price.currency}} {{product.price.amount}}</h4>
+    <h3>{{ product?.name }}</h3>
+    <h6>By {{ product?.store }}</h6>
+    <h4>{{ product?.price?.currency }} {{ product?.price?.amount }}</h4>
     <div class="custom-attributes">
       <div v-for="(attrib, aid) in customizations" v-bind:key="aid">
         <div v-if="attrib.type === 'Array'">
@@ -11,7 +10,6 @@
             :label-cols="2"
             :label="attrib.name"
             :label-for="attrib.name+aid"
-            label-size=""
             class="mb-3"
           >
             <BFormSelect
@@ -37,10 +35,13 @@
                 <li v-for="(color, cid) in attrib.values" v-bind:key="cid">
                   <div
                     v-bind:style="{'background-color': color.hexValue}"
-                    v-b-tooltip.hover
                     :title="color.name"
                     @click="colorClicked(attrib.key, color)"
-                    v-bind:class="{'selected': color.hexValue === selectedCustomizations[attrib.key].hexValue && color.name === selectedCustomizations[attrib.key].name}"
+                    v-bind:class="{
+                      'selected': selectedCustomizations[attrib.key] &&
+                                 color.hexValue === selectedCustomizations[attrib.key].hexValue &&
+                                 color.name === selectedCustomizations[attrib.key].name
+                    }"
                   ></div>
                 </li>
               </ul>
@@ -56,13 +57,15 @@
       </BButton>
     </p>
     <hr>
-    <div v-html="product.details_html"></div>
+    <div v-if="product?.details_html" v-html="product.details_html"></div>
 
     <BPopover
       ref="popoverRef"
-      v-model="showLoginPopover"
+      :show.sync="showLoginPopover"
       target="add-to-cart-sync"
-      placement="top-end"
+      placement="top"
+      title="Login Required"
+      triggers="manual"
     >
       <template #title>Login Required</template>
       <p class="info">You need to login to add products to the cart.</p>
@@ -79,11 +82,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeMount } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useCartStore } from '@/stores/cartStore'; // Assuming Pinia store
-import { useAuthStore } from '@/stores/authStore'; // Assuming Pinia store
+import { useCartStore } from '@/stores/cartStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useNotification } from '@kyvg/vue3-notification';
 import _ from 'lodash';
+import {
+  BButton,
+  BFormGroup,
+  BFormSelect,
+  BFormInvalidFeedback,
+  BRow,
+  BCol,
+  BPopover
+} from 'bootstrap-vue-3';
 
 // Props
 const props = defineProps({
@@ -93,20 +106,22 @@ const props = defineProps({
   },
 });
 
-// Router and stores
+// Initialize router, stores and notifications
 const router = useRouter();
 const cartStore = useCartStore();
 const authStore = useAuthStore();
+const {notify} = useNotification();
+const popoverRef = ref(null);
 
 // Reactive state
 const product = ref(null);
 const selectedCustomizations = ref({});
 const showLoginPopover = ref(false);
-const popoverRef = ref(null);
 
 // Computed properties
 const customizations = computed(() => {
-  return product.value?.customizationOptions?.customizations || [];
+  if (!product.value || !product.value.customizationOptions) return [];
+  return product.value.customizationOptions.customizations || [];
 });
 
 const isSessionActive = computed(() => {
@@ -114,86 +129,94 @@ const isSessionActive = computed(() => {
 });
 
 // Methods
+const colorClicked = (key, colorObj) => {
+  if (!selectedCustomizations.value) {
+    selectedCustomizations.value = {};
+  }
+  selectedCustomizations.value[key] = colorObj;
+};
+
 const addToCart = async () => {
   if (!isSessionActive.value) {
-    if (popoverRef.value) {
-      // For Vue 3, component methods are accessed differently
-      popoverRef.value.show = true;
-    }
     showLoginPopover.value = true;
     return;
   }
 
-  // Disable the popover
-  if (popoverRef.value) {
-    popoverRef.value.show = false;
-  }
+  // Hide popover
+  showLoginPopover.value = false;
+
+  if (!product.value) return;
 
   product.value.customValues = {};
-  Object.keys(selectedCustomizations.value).forEach((key) => {
-    if (typeof selectedCustomizations.value[key] === 'string') {
-      product.value.customValues[key] = selectedCustomizations.value[key];
+  Object.keys(selectedCustomizations.value || {}).forEach((key) => {
+    const customization = selectedCustomizations.value[key];
+    if (!customization) return;
+
+    if (typeof customization === 'string') {
+      product.value.customValues[key] = customization;
     } else {
-      product.value.customValues[key] = `${
-        selectedCustomizations.value[key].name
-      }|${selectedCustomizations.value[key].hexValue}`;
+      product.value.customValues[key] = `${customization.name}|${customization.hexValue}`;
     }
   });
 
-  // Access Pinia store action directly
-  const val = await cartStore.addToTheCart([product.value]);
+  try {
+    const val = await cartStore.addToTheCart([product.value]);
 
-  if (val) {
-    // Notification system - using whatever notification system you have in Vue 3
-    // This assumes you have a similar notification system
+    if (val) {
+      notify({
+        group: 'toast',
+        type: 'success',
+        text: `Added ${product.value.name} to the cart`,
+        title: 'Added to Cart',
+      });
+    } else {
+      notify({
+        group: 'toast',
+        type: 'warn',
+        text: `${product.value.name} couldn't be added for some reason. Please try again later`,
+      });
+    }
+  } catch (error) {
+    console.error('Error adding to cart:', error);
     notify({
       group: 'toast',
-      type: 'success',
-      text: `Added ${product.value.name} to the cart`,
-      title: 'Added to Cart<font-awesome-icon icon="cart"/>',
-    });
-  } else {
-    notify({
-      group: 'toast',
-      type: 'warn',
-      text: `${product.value.name} couldn't be added for some reason. Please try again later`,
+      type: 'error',
+      text: 'An error occurred while adding to cart',
     });
   }
-};
-
-const colorClicked = (key, colorObj) => {
-  selectedCustomizations.value[key] = colorObj;
 };
 
 const increaseCount = () => {
-  product.value.counts += 1;
-};
-
-const decreaseCount = () => {
-  product.value.counts -= 1;
-  if (product.value.counts < 0) {
-    product.value.counts = 0;
+  if (product.value) {
+    product.value.counts = (product.value.counts || 0) + 1;
   }
 };
 
-// Initialize the notification system - update based on your notification library
-const notify = (options) => {
-  // This is a placeholder for whatever notification system you're using
-  // You might use something like:
-  // useToast().success(options.text)
-  // or
-  // app.config.globalProperties.$notify(options)
-  console.log('Notification:', options);
+const decreaseCount = () => {
+  if (product.value) {
+    product.value.counts = (product.value.counts || 0) - 1;
+    if (product.value.counts < 0) {
+      product.value.counts = 0;
+    }
+  }
 };
 
 // Initialize component
-onBeforeMount(() => {
-  product.value = props.data;
-})
-
 onMounted(() => {
-  product.value = props.data;
-  selectedCustomizations.value = _.cloneDeep(product.value.customValues);
+  try {
+    if (props.data) {
+      product.value = props.data;
+
+      // Initialize customizations safely
+      if (product.value.customValues) {
+        selectedCustomizations.value = _.cloneDeep(product.value.customValues);
+      } else {
+        selectedCustomizations.value = {};
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing ProductDescription:', error);
+  }
 });
 </script>
 
@@ -218,6 +241,7 @@ onMounted(() => {
 
   .color-select {
     padding-left: 0px;
+
     li,
     div {
       display: inline-block;
@@ -238,9 +262,11 @@ onMounted(() => {
   .custom-attributes {
     margin-top: 1rem;
   }
+
   .section-title {
     font-size: 1.2em;
   }
+
   .add-to-cart {
     background-color: white; /*this for transparent button*/
     border: 2px solid black; /* this is for button border*/
@@ -248,12 +274,14 @@ onMounted(() => {
     color: black;
     padding: 10px 40px;
   }
+
   .add-to-cart:hover {
     background-color: black; /*this for transparent button*/
     border: 2px solid black; /* this is for button border*/
     border-radius: 0px;
     color: white;
   }
+
   h3 {
     color: black;
   }

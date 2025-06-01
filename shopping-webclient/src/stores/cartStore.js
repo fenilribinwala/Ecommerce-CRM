@@ -28,7 +28,7 @@ export const useCartStore = defineStore('cart', {
       return total;
     },
     // getTotalWeight: (state) => state.totalWeight,
-    // getSubTotal: (state) => state.subTotalPrice,
+    getSubTotal: (state) => state.subTotalPrice,
     // getServiceCharge: (state) => state.serviceCharge,
     // getShippingPrice: (state) => state.shippingPrice,
     // getTariffPrice: (state) => state.tariffPrice,
@@ -99,7 +99,7 @@ export const useCartStore = defineStore('cart', {
 
     async addToTheCart(products) {
       // Import auth store directly when needed
-      const authStore = useAuthStore();
+      const authStore = await useAuthStore();
 
       // Checks if the session is active. If not, it means that the user is not logged in.
       if (!authStore.isSessionActive && products.length > 0) {
@@ -124,7 +124,7 @@ export const useCartStore = defineStore('cart', {
 
         if (data.httpStatus === 200) {
           if (this.checkoutInitiated) {
-            const shippingStore = useShippingStore();
+            const shippingStore = await useShippingStore();
             const reqObj = {
               address: shippingStore.getSelectedAddress,
               shippingMethod: shippingStore.shippingMethod
@@ -162,7 +162,7 @@ export const useCartStore = defineStore('cart', {
 
     async deleteOrders(cartItems) {
       const deletedIds = _.map(cartItems, '_id');
-      const authStore = useAuthStore();
+      const authStore = await useAuthStore();
 
       // Checks if the session is active. If not, it means that the user is not logged in.
       if (!authStore.isSessionActive) {
@@ -182,7 +182,7 @@ export const useCartStore = defineStore('cart', {
 
         if (data.httpStatus === 200) {
           if (this.checkoutInitiated) {
-            const shippingStore = useShippingStore();
+            const shippingStore = await useShippingStore();
             const reqObj = {
               address: shippingStore.getSelectedAddress,
               shippingMethod: shippingStore.shippingMethod
@@ -201,7 +201,7 @@ export const useCartStore = defineStore('cart', {
     },
 
     async updateOrders(payloadArray) {
-      const authStore = useAuthStore();
+      const authStore = await useAuthStore();
 
       // Checks if the session is active. If not, it means that the user is not logged in.
       if (!authStore.isSessionActive) {
@@ -233,7 +233,7 @@ export const useCartStore = defineStore('cart', {
 
         if (data.httpStatus === 200) {
           if (this.checkoutInitiated) {
-            const shippingStore = useShippingStore();
+            const shippingStore = await useShippingStore();
             const reqObj = {
               address: shippingStore.getSelectedAddress,
               shippingMethod: shippingStore.shippingMethod
@@ -326,11 +326,13 @@ export const useCartStore = defineStore('cart', {
 });
 
 // Add these imports where they're needed
-function useAuthStore() {
+async function useAuthStore() {
   // Dynamic import to avoid circular dependency issues
-  return import('@/stores/authStore').then(module => module.useAuthStore())();
+  const authStoreModule = await import('./authStore');
+  return authStoreModule.useAuthStore();
 }
 
-function useShippingStore() {
-  return import('@/stores/shippingStore').then(module => module.useShippingStore())();
+async function useShippingStore() {
+  const shippingStoreModule = await import('./shippingStore');
+  return shippingStoreModule.useShippingStore();
 }

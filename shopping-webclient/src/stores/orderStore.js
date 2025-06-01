@@ -1,45 +1,55 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axiosInstance from '../plugins/axios';
+import _ from 'lodash';
+import Pagination from '../dto/Pagination.json';
+import ProxyUrls from '../constants/ProxyUrls';
 
-export const useOrderStore = defineStore('orderStore', {
+export const useOrderStore = defineStore('order', {
   state: () => ({
-    orders: [],
-    loading: false,
-    error: null
+    paging: _.cloneDeep(Pagination),
+    ordersMaster: [],
   }),
-  
+
   getters: {
-    orders: (state) => state.orders,
+    orders: (state) => state.ordersMaster,
   },
-  
+
   actions: {
-    async getOrderList(payload) {
-      try {
-        this.loading = true;
-        const response = await axios.get('/api/customer/order', { params: payload });
-        if (response.data.status) {
-          this.orders = response.data.data;
-        } else {
-          this.error = response.data.errorDetails || 'Failed to fetch orders';
-        }
-        return response.data.data;
-      } catch (error) {
-        this.error = error.message;
-        return [];
-      } finally {
-        this.loading = false;
-      }
+    // Mutations become actions in Pinia
+    setMasterOrders(payload) {
+      if (!payload) return;
+      this.ordersMaster.splice(0, this.ordersMaster.length);
+      this.ordersMaster.push(...payload);
     },
-    
-    resetStore() {
-      this.orders = [];
-      this.error = null;
-    }
+
+    setPaging(allData) {
+      if (!allData) return;
+      this.paging.page = allData.page;
+      this.paging.total = allData.total;
+      this.paging.pages = allData.pages;
+      this.paging.limit = allData.limit;
+    },
+
+    // Original actions
+    async getOrderList(query = '') {
+      try {
+        const { data } = await axiosInstance({
+          method: 'post',
+          url: ProxyUrls.orderList,
+          data: {
+            pagingOptions: this.paging,
+          },
+        });
+
+        if (data && data.httpStatus === 200) {
+          this.setMasterOrders(data.responseData.docs);
+          this.setPaging(data.responseData);
+        }
+      } catch (error) {
+        console.error('Error fetching order list:', error);
+        throw error;
+      }
+      return false;
+    },
   },
-  
-  persist: {
-    key: 'orderStore',
-    storage: localStorage,
-    paths: ['orders']
-  }
 });

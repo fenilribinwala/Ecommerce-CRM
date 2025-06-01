@@ -6,16 +6,13 @@
       :sidebarWidth="SIDEBAR_WIDTH"
       @activateSidebar="openSidebar"
     />
-
     <div class="mainview" :style="mainviewStyle">
       <router-view/>
       <FooterView/>
     </div>
-
     <div class="left-sidebar" :style="menuStyle">
       <LeftMenuView @close="menuViewVisible=false"/>
     </div>
-
     <div class="sidebar" :style="cartStyle">
       <CartView
         v-show="cartViewVisible"
@@ -27,30 +24,33 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import HeaderMenu from '@/components/HeaderMenu.vue';
-import FooterView from '@/components/Footer.vue';
-import CartView from '@/components/cart/Cart.vue';
-import LeftMenuView from '@/components/LeftMenu.vue';
+import {ref, computed} from 'vue';
+import HeaderMenu from '../components/HeaderMenu.vue';
+import FooterView from '../components/Footer.vue';
+import CartView from '../components/cart/Cart.vue';
+import LeftMenuView from '../components/LeftMenu.vue';
 
+// Reactive state
 const cartViewVisible = ref(false);
 const menuViewVisible = ref(false);
 const SIDEBAR_WIDTH = 350;
 
-function closeRightSidebar() {
+// Methods
+const closeRightSidebar = () => {
   cartViewVisible.value = false;
-}
+};
 
-function openCart() {
+const openCart = () => {
   cartViewVisible.value = true;
   menuViewVisible.value = false;
-}
+};
 
-function openSidebar() {
+const openSidebar = () => {
   menuViewVisible.value = true;
   cartViewVisible.value = false;
-}
+};
 
+// Computed properties
 const mainviewStyle = computed(() => {
   let str = '';
   if (cartViewVisible.value) {

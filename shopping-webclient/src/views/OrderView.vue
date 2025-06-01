@@ -3,23 +3,20 @@
     <div class="space"></div>
     &nbsp;
     <h2>Your orders</h2>
-
-    <b-tabs>
+    <BTabs>
       <template #tabs>
-        <b-nav-item
+        <BNavItem
           v-for="(item, ind) in tabs"
           v-bind:key="ind"
           :active="activeTab === item.key"
           @click="tabSelected(item.key)"
-        >{{item.name}}</b-nav-item>
+        >{{item.name}}</BNavItem>
       </template>
-    </b-tabs>
-
+    </BTabs>
     <div class="order-list">
       <div v-for="(order, oid) in filteredOrders" v-bind:key="oid">
         <single-order :order="order"/>
       </div>
-
       <div v-if="filteredOrders.length <= 0" class="empty-info">
         <p>No orders are in this status.</p>
       </div>
@@ -28,16 +25,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useOrderStore } from '@/stores/orderStore';
-import SingleOrder from '@/components/orders/SingleOrder.vue';
+import {ref, computed, onMounted} from 'vue';
+import {useOrderStore} from '../stores/orderStore';
+import SingleOrder from '../components/orders/SingleOrder.vue';
+import {BTabs, BNavItem} from 'bootstrap-vue-3';
 import _ from 'lodash';
 
 // Initialize store
 const orderStore = useOrderStore();
 
-// Reactive data
-const activeTab = ref('all');
+// Reactive state
 const tabs = ref([
   {
     name: 'Orders',
@@ -56,9 +53,16 @@ const tabs = ref([
     key: 'cancelled',
   },
 ]);
+const activeTab = ref('all');
+
+// Methods
+const tabSelected = (key) => {
+  activeTab.value = key;
+};
 
 // Computed properties
 const orders = computed(() => orderStore.orders);
+
 const filteredOrders = computed(() => {
   if (activeTab.value === 'open') {
     return _.filter(orders.value, i => i.overall_status !== 'COMPLETED' && i.overall_status !== 'CANCELLED');
@@ -69,16 +73,10 @@ const filteredOrders = computed(() => {
   if (activeTab.value === 'cancelled') {
     return _.filter(orders.value, i => i.overall_status === 'CANCELLED');
   }
-
   return orders.value;
 });
 
-// Methods
-function tabSelected(key) {
-  activeTab.value = key;
-}
-
-// Initialize component
+// Lifecycle hooks
 onMounted(async () => {
   // Look for all the items from the order list.
   await orderStore.getOrderList('');

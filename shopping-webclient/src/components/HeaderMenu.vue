@@ -7,33 +7,25 @@
       type="light"
       :style="headerStyle"
     >
-      <BButton
-        variant="link"
-        class="d-sm-block d-md-none burger p-2 border-0 shadow-none"
-        @click="burgerClick"
-        aria-label="Toggle navigation"
-      >
+      <button target="nav_collapse" @click="burgerClick" class="d-sm-block d-md-none burger">
         <span class="navbar-toggler-icon"></span>
-      </BButton>
-
-      <BNavbarBrand to="/" class="p-0">
+      </button>
+      <BNavbarBrand to="/">
         <img
-          src="@/assets/logo_transparent_blue_black.png"
+          src="../assets/logo_transparent_blue_black.png"
           alt="VENIQA"
           width="125px"
           style="padding: 0.5rem 0rem;"
         >
       </BNavbarBrand>
-
-      <BNavItem class="d-xs-block d-sm-block d-md-none position-relative" @click="$emit('openCart')">
+      <BNavItem class="d-xs-block d-sm-block d-md-none" @click="emit('openCart')">
         <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-        <BBadge pill variant="danger" class="position-absolute top-0 start-100 translate-middle">{{totalOrders}}</BBadge>
+        <BBadge pill variant="danger">{{totalOrders}}</BBadge>
       </BNavItem>
-
       <div class="mobile-search-bar d-xs-block d-sm-block d-md-none">
         <input
           type="text"
-          class="form-control special-search-input"
+          class="special-search-input"
           placeholder="Search for products"
           v-model="searchTerm"
           style="width: 100%"
@@ -41,7 +33,6 @@
           @keydown.esc="showSearch = false"
         >
       </div>
-
       <transition
         name="shipping-form-anim"
         enter-active-class="animate__animated animate__slideInLeft animate__slower"
@@ -56,7 +47,7 @@
             >
               <input
                 type="text"
-                class="form-control special-search-input d-none d-md-block"
+                class="special-search-input d-none d-md-block"
                 placeholder="Search for products"
                 v-if="showSearch"
                 v-model="searchTerm"
@@ -72,16 +63,13 @@
                 icon="search"
               />
             </div>
-
             <BNavItem @click="openCategory('Women')" class="veniqa-nav d-none d-md-block">Women</BNavItem>
             <BNavItem @click="openCategory('Men')" class="veniqa-nav d-none d-md-block">Men</BNavItem>
-
             <BNavItem
               class="veniqa-nav d-none d-md-block"
               to="/login"
               v-if="!isSessionActive"
             >Login</BNavItem>
-
             <BNavItemDropdown
               class="veniqa-nav d-none d-md-block"
               :text="nameOfUser"
@@ -90,17 +78,18 @@
             >
               <BDropdownItem href="#">Profile</BDropdownItem>
               <BDropdownItem v-if="isSessionActive" to="/orders">Orders</BDropdownItem>
-              <BDropdownItem @click="logoutClicked()">Logout</BDropdownItem>
+              <BDropdownItem @click="logoutClicked">Logout</BDropdownItem>
             </BNavItemDropdown>
-            <BNavItem class="veniqa-nav d-none d-md-block position-relative" @click="$emit('openCart')">
+            <BNavItem class="veniqa-nav d-none d-md-block" @click="emit('openCart')">
               <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-              <BBadge pill variant="danger" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">{{totalOrders}}</BBadge>
+              <BBadge pill variant="danger">{{totalOrders}}</BBadge>
             </BNavItem>
           </BNavbarNav>
-
+          <!-- Displays only when collapsible option is true -->
           <div class="sidenav ms-auto d-md-none">
-            <LeftMenuView/>
+            <left-menu-view/>
           </div>
+          <!-- End of Collapsible view display -->
         </BCollapse>
       </transition>
     </BNavbar>
@@ -113,10 +102,20 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useShippingStore } from '@/stores/shippingStore';
-import LeftMenuView from '@/components/LeftMenu.vue';
 import { useNotification } from '@kyvg/vue3-notification';
+import LeftMenuView from '@/components/LeftMenu.vue';
+import {
+  BNavbar,
+  BNavbarBrand,
+  BNavItem,
+  BCollapse,
+  BNavbarNav,
+  BNavItemDropdown,
+  BDropdownItem,
+  BBadge
+} from 'bootstrap-vue-3';
 
-// Define props
+// Define props and emits
 const props = defineProps({
   rightSidebarVisible: {
     type: Boolean,
@@ -130,65 +129,44 @@ const props = defineProps({
   },
 });
 
-// Define emits
-const emit = defineEmits(['openCart', 'activateSidebar']);
+const emit = defineEmits(['activateSidebar', 'openCart']);
 
-// Initialize stores
+// Initialize stores and router
 const router = useRouter();
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 const shippingStore = useShippingStore();
 const { notify } = useNotification();
 
-// Reactive data
+// Reactive state
+const scrollPos = ref(null);
 const showSearch = ref(false);
 const searchTerm = ref('');
 
-// Computed properties
-const nameOfUser = computed(() => {
-  return authStore.getUser?.firstName || 'User';
-});
-
-const totalOrders = computed(() => {
-  return cartStore.getTotalItems || 0;
-});
-
-const isSessionActive = computed(() => {
-  return authStore.isSessionActive;
-});
-
-const headerStyle = computed(() => {
-  return {
-    'margin-right': props.rightSidebarVisible
-      ? `${props.sidebarWidth}px`
-      : '0px',
-  };
-});
-
 // Methods
-function burgerClick() {
+const burgerClick = () => {
   emit('activateSidebar');
-}
+};
 
-function openCategory(cat) {
+const openCategory = (cat) => {
   router.push({
     path: '/search',
     query: {
       category: cat,
     },
   });
-}
+};
 
-function searchProduct() {
+const searchProduct = () => {
   router.push({
     path: '/search',
     query: {
       term: searchTerm.value,
     },
   });
-}
+};
 
-async function logoutClicked() {
+const logoutClicked = async () => {
   try {
     await authStore.logout();
     notify({
@@ -206,7 +184,28 @@ async function logoutClicked() {
       text: 'Sorry but we could not log you out at the moment.',
     });
   }
-}
+};
+
+// Computed properties
+const nameOfUser = computed(() => {
+  return authStore.getFirstName;
+});
+
+const totalOrders = computed(() => {
+  return cartStore.getTotalItems;
+});
+
+const isSessionActive = computed(() => {
+  return authStore.isSessionActive;
+});
+
+const headerStyle = computed(() => {
+  return {
+    'margin-right': props.rightSidebarVisible
+      ? `${props.sidebarWidth}px`
+      : '0px',
+  };
+});
 </script>
 
 <style lang="scss">
@@ -217,7 +216,6 @@ async function logoutClicked() {
       width: 100%;
     }
   }
-
   .mobile-search-bar {
     padding: 10px 0px;
     width: 100%;
@@ -264,10 +262,8 @@ async function logoutClicked() {
 .header-color {
   background-color: white;
   // color: white !important;
-
   transition: margin-right 0.5s;
 }
-
 .veniqa-nav {
   padding: 5px 10px;
   margin-left: 2rem;
@@ -286,12 +282,10 @@ async function logoutClicked() {
 .modal-backdrop.show {
   opacity: 0.7 !important;
 }
-
 .burger {
   border: 0;
   background: none;
 }
-
 .navbar-override {
   width: 90%;
   margin-left: auto;
