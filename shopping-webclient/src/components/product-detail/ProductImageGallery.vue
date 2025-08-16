@@ -113,26 +113,23 @@ const runImager = () => {
       } else {
         options.value.inlinePane = false;
         options.value.paneContainer = document.getElementById(pane_id.value);
-        const rect = document
-          .querySelector(`.${zoomer_box.value}`)
-          .getBoundingClientRect();
-        let customStyle = '';
-        if (options.value.pane === 'pane') {
-          customStyle = `width:${rect.width * 1.2}px;height:${
-            rect.height
-          }px;left:${rect.right}px;top:${0}px;`;
-        } else {
-          const rect1 = document
-            .querySelector('.preview-box')
-            .getBoundingClientRect();
-          const beginner = document
-            .querySelector('.beginner')
-            .getBoundingClientRect();
-          customStyle = `width:${rect1.width}px;height:${
-            rect1.height
-          }px;left:${rect1.x - beginner.x}px;top:${0}px;`;
+        
+        // Get the exact position and dimensions of the preview image
+        const previewImage = document.querySelector(`.${zoomer_box.value} .preview-box img`);
+        if (previewImage) {
+          const imageRect = previewImage.getBoundingClientRect();
+          const pageRect = document.body.getBoundingClientRect();
+          
+          let customStyle = '';
+          if (options.value.pane === 'pane') {
+            // Position the zoom pane exactly over the preview image
+            customStyle = `width:${imageRect.width}px;height:${imageRect.height}px;left:${imageRect.left - pageRect.left}px;top:${imageRect.top - pageRect.top}px;`;
+          } else {
+            // For container mode, position over the image as well
+            customStyle = `width:${imageRect.width}px;height:${imageRect.height}px;left:${imageRect.left - pageRect.left}px;top:${imageRect.top - pageRect.top}px;`;
+          }
+          options.value.paneContainer.setAttribute('style', customStyle);
         }
-        options.value.paneContainer.setAttribute('style', customStyle);
       }
       options.value.injectBaseStyles = true;
       const previewImg = `.${zoomer_box.value} .preview-box img`;

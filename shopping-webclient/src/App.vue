@@ -127,8 +127,13 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style>
+<style lang="scss">
 @import url('https://fonts.googleapis.com/css?family=Karla');
+@import './assets/css/global.scss';
+@import './assets/css/sidebar.scss';
+@import './assets/css/overrides.scss';
+@import './assets/css/hover.css';
+@import './assets/css/drift-basic.css';
 
 #app {
   font-family: 'Quicksand','Raleway', sans-serif;

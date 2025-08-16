@@ -84,7 +84,8 @@ async function login(userInfo) {
     const data = await authStore.login(userInfo);
 
     if (data.cart && data.cart.items.length > 0) {
-      const incomingProductIds = _.map(data.cart, 'product_id');
+      // const incomingProductIds = _.map(data.cart, 'product_id');
+      const incomingProductIds = _.map(data.cart.items, 'product'); // This is the new way of doing it.
       // Update the cart values.
       const currentCartItems = cartStore.cart;
 
