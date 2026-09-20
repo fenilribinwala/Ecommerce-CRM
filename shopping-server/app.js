@@ -12,15 +12,11 @@ import compression from 'compression';
 import cors from 'cors';
 import config from 'config';
 
-// Babel imports, even though they aren't directly referenced, they need to be here
-import babelCore from 'babel-core/register';
-import babelPolyfill from 'babel-polyfill';
-
 // Imports for session management
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import session from 'express-session';
-import redis from 'redis';
-var RedisStore = require('connect-redis')(session);
+import * as redis from 'redis';
+import RedisStore from 'connect-redis';
 
 // Imports for Rate Limiting (DDos attacks prevention)
 import RateLimit from 'express-rate-limit';
@@ -52,24 +48,33 @@ db.dbConnection();
 var redisClient = null;
 
 if (process.env.NODE_ENV && process.env.NODE_ENV === 'development') {
-  redisClient = redis.createClient(process.env.VENIQA_REDIS_HOST);
+  redisClient = redis.createClient({
+    socket: {
+      host: process.env.VENIQA_REDIS_HOST.replace(/^redis:\/\//, ''),
+      port: Number(process.env.VENIQA_REDIS_PORT)
+    },
+    password: process.env.VENIQA_REDIS_PASSWORD,
+    database: Number(process.env.VENIQA_REDIS_DB_NUMBER)
+  });
 }
 else {
   redisClient = redis.createClient({
-    host: process.env.VENIQA_REDIS_HOST, 
-    port: process.env.VENIQA_REDIS_PORT, 
-    password: process.env.VENIQA_REDIS_PASSWORD, 
-    db: Number(process.env.VENIQA_REDIS_DB_NUMBER),
-    tls: {
-      host: process.env.VENIQA_REDIS_HOST,
-      port: process.env.VENIQA_REDIS_PORT,
-      servername: process.env.VENIQA_REDIS_HOST
-    }
+    socket: {
+      host: process.env.VENIQA_REDIS_HOST.replace(/^redis:\/\//, ''),
+      port: Number(process.env.VENIQA_REDIS_PORT),
+      tls: true
+    },
+    password: process.env.VENIQA_REDIS_PASSWORD,
+    database: Number(process.env.VENIQA_REDIS_DB_NUMBER)
   });
 }
 
 redisClient.on('error', err => {
   console.error("Redis encountered an error --> ", err )
+})
+
+redisClient.connect().catch(err => {
+  console.error("Redis failed to connect --> ", err)
 })
 
 /************************************************************* */
@@ -78,7 +83,7 @@ var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -96,10 +101,6 @@ app.use(session({
     return uuidv4() // Use UUIDs for session IDs
   },
   store: new RedisStore({
-    host: process.env.VENIQA_REDIS_HOST, 
-    port: process.env.VENIQA_REDIS_PORT, 
-    pass: process.env.VENIQA_REDIS_PASSWORD, 
-    db: Number(process.env.VENIQA_REDIS_DB_NUMBER),
     client: redisClient
   }),
   secret: process.env.VENIQA_SESSION_SECRET_KEY,
@@ -116,14 +117,12 @@ app.use(session({
 /************************************************************* */
 // Configure Request Rate Limiter
 
-var limiter = new RateLimit({
+var limiter = RateLimit({
   store: new RateLimitRedis({
-    client: redisClient,
-    expiry: 60 * 15 // How long each rate limiting window exists for in seconds
+    sendCommand: (...args) => redisClient.sendCommand(args)
   }),
   windowMs: 60 * 1000, // 1 minute window in milliseconds
   max: 200, // limit each IP to 200 requests per windowMs
-  delayMs: 0,  // disable delaying - full speed until the max limit is reached
   statusCode: 429
 })
 

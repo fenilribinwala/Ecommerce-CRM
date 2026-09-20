@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
-import mongoosePaginator from 'mongoose-paginate';
+import mongoosePaginator from 'mongoose-paginate-v2';
 import config from 'config';
 
 import productSchema from '../schemas/product';

@@ -1,5 +1,5 @@
 var LocalStrategy   = require('passport-local').Strategy;
-import bCrypt from 'bcrypt-nodejs';
+import bCrypt from 'bcrypt';
 import HttpStatusCode from "http-status-codes";
 import User from '../database/models/user';
 import * as _ from 'lodash';

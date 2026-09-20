@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import bCrypt from 'bcrypt-nodejs';
+import bCrypt from 'bcrypt';
 
 export default {
     generateRandomToken() {
