@@ -1,5 +1,5 @@
 var LocalStrategy   = require('passport-local').Strategy;
-import bCrypt from 'bcrypt-nodejs';
+import bCrypt from 'bcrypt';
 import User from '../database/models/user';
 import logger from '../logging/logger'
 
