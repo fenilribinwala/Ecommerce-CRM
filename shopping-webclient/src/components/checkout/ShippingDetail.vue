@@ -201,7 +201,7 @@
                 :state="countryState"
                 name="country"
                 id="country"
-              />
+              ></b-form-select>
               <b-form-invalid-feedback id="countryFeedback">
                 <!-- This will only be shown if the preceeding input has an invalid state -->
                 The country cannot be empty.
@@ -209,6 +209,7 @@
             </b-form-group>
           </b-col>
         </b-row>
+
         <div class="action-buttons">
           <b-button variant="secondary-button" class="cancel-btn" @click="cancelForm()">Cancel</b-button>
           <b-button class="primary-button" v-if="!isUpdate" @click="saveAddress()">Save</b-button>
@@ -219,152 +220,155 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useShippingStore } from '@/stores/shippingStore';
 import ShippingDTO from '@/dto/ShippingAddress.json';
-import { mapGetters } from 'vuex';
+import _ from 'lodash';
 
-export default {
-  name: 'ShippingDetail',
-  async created() {
-    this.shippingDeet = ShippingDTO;
-    await this.$store.dispatch('shippingStore/addressAction', {
-      address: null,
-      action: 'get',
+// Define emits
+const emit = defineEmits(['selected']);
+
+// Initialize router and stores
+const router = useRouter();
+const authStore = useAuthStore();
+const shippingStore = useShippingStore();
+
+// Reactive data
+const isShowAddAddress = ref(false);
+const shippingDeet = reactive(_.cloneDeep(ShippingDTO));
+const description = ref('');
+const isUpdate = ref(false);
+const countryOptions = ref(['Bangladesh', 'Nepal']);
+
+// Computed properties
+const allAddresses = computed(() => shippingStore.allAddresses);
+const selectedAddress = computed(() => shippingStore.getSelectedAddress);
+const isSessionActive = computed(() => authStore.isSessionActive);
+
+// Initialize data on component creation
+onMounted(async () => {
+  await shippingStore.addressAction({
+    address: null,
+    action: 'get',
+  });
+
+  if (allAddresses.value.length > 0 && !selectedAddress.value) {
+    emit('selected', allAddresses.value[0]);
+  }
+});
+
+// Form validation computed properties
+const cityState = computed(() => {
+  if (shippingDeet.city == null) return null;
+  return shippingDeet.city.length >= 1;
+});
+
+const phoneState = computed(() => {
+  if (shippingDeet.mobilePhone == null) return null;
+  return shippingDeet.mobilePhone.length >= 1;
+});
+
+const firstNameState = computed(() => {
+  if (shippingDeet.firstName == null) return null;
+  return shippingDeet.firstName.length >= 1;
+});
+
+const address1State = computed(() => {
+  if (shippingDeet.addressLine1 == null) return null;
+  return shippingDeet.addressLine1.length > 0;
+});
+
+const stateState = computed(() => {
+  if (shippingDeet.state == null) return null;
+  return shippingDeet.state.length > 0;
+});
+
+const zipState = computed(() => {
+  if (shippingDeet.zipCode == null) return null;
+  return shippingDeet.zipCode.length > 0;
+});
+
+const countryState = computed(() => {
+  if (shippingDeet.country == null) return null;
+  return shippingDeet.country.length > 0;
+});
+
+// Methods
+function showAddAddress() {
+  isShowAddAddress.value = true;
+}
+
+function hideAddAddress() {
+  isShowAddAddress.value = false;
+}
+
+function cancelForm() {
+  resetFields();
+  isShowAddAddress.value = false;
+  isUpdate.value = false;
+}
+
+function resetFields() {
+  // Reset all fields in the shippingDeet object
+  Object.keys(shippingDeet).forEach(key => {
+    shippingDeet[key] = null;
+  });
+}
+
+function addressEqual(givenAdd) {
+  return _.isEqual(givenAdd, selectedAddress.value);
+}
+
+function chooseAddress(add) {
+  emit('selected', add);
+}
+
+function editClicked(address) {
+  isUpdate.value = true;
+  Object.assign(shippingDeet, _.cloneDeep(address));
+  isShowAddAddress.value = true;
+}
+
+function deleteClicked(address) {
+  const cloned = _.cloneDeep(address);
+  shippingStore.addressAction({
+    address: cloned,
+    action: 'delete',
+  });
+}
+
+async function saveAddress() {
+  // Set empty strings for null values
+  Object.keys(shippingDeet).forEach(key => {
+    if (shippingDeet[key] == null) {
+      shippingDeet[key] = '';
+    }
+  });
+
+  if (
+    firstNameState.value &&
+    address1State.value &&
+    stateState.value &&
+    zipState.value &&
+    countryState.value &&
+    cityState.value
+  ) {
+    const cloned = _.cloneDeep(shippingDeet);
+    const res = await shippingStore.addressAction({
+      address: cloned,
+      action: isUpdate.value ? 'put' : 'post',
     });
 
-    if (this.allAddresses.length > 0 && !this.selectedAddress) {
-      this.$emit('selected', this.allAddresses[0]);
+    if (res) {
+      isUpdate.value = false;
+      resetFields();
+      isShowAddAddress.value = false;
     }
-  },
-  data() {
-    return {
-      isShowAddAddress: false,
-      shippingDeet: null,
-      description: '',
-      isUpdate: false,
-      countryOptions: ['Bangladesh', 'Nepal'],
-    };
-  },
-
-  methods: {
-    showAddAddress() {
-      this.isShowAddAddress = true;
-    },
-    hideAddAddress() {
-      this.isShowAddAddress = false;
-    },
-
-    cancelForm() {
-      this.resetFields();
-      this.isShowAddAddress = false;
-      this.isUpdate = false;
-    },
-
-    resetFields() {
-      // eslint-disable-next-line
-      for (const key in this.shippingDeet) {
-        this.shippingDeet[key] = null;
-      }
-    },
-
-    addressEqual(givenAdd) {
-      return _.isEqual(givenAdd, this.selectedAddress);
-    },
-
-    chooseAddress(add) {
-      this.$emit('selected', add);
-    },
-
-    editClicked(address) {
-      this.isUpdate = true;
-      this.shippingDeet = _.cloneDeep(address);
-      this.isShowAddAddress = true;
-    },
-
-    deleteClicked(address) {
-      const cloned = _.cloneDeep(address);
-      this.$store.dispatch('shippingStore/addressAction', {
-        address: cloned,
-        action: 'delete',
-      });
-    },
-
-    async saveAddress() {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const key in this.shippingDeet) {
-        if (this.shippingDeet[key] == null) {
-          this.shippingDeet[key] = '';
-        }
-      }
-      if (
-        this.firstNameState
-        && this.address1State
-        && this.stateState
-        && this.zipState
-        && this.countryState
-        && this.cityState
-      ) {
-        const cloned = _.cloneDeep(this.shippingDeet);
-        const res = await this.$store.dispatch('shippingStore/addressAction', {
-          address: cloned,
-          action: this.isUpdate ? 'put' : 'post',
-        });
-
-        if (res) {
-          this.isUpdate = false;
-          // this.allAddresses.push(cloned);
-          // this.$emit('selected', cloned);
-
-          this.resetFields();
-          this.isShowAddAddress = false;
-        }
-      }
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      allAddresses: 'shippingStore/allAddresses',
-      selectedAddress: 'shippingStore/getSelectedAddress',
-      isSessionActive: 'authStore/isSessionActive',
-    }),
-
-    cityState() {
-      if (this.shippingDeet.city == null) return null;
-      return this.shippingDeet.city.length >= 1;
-    },
-
-    phoneState() {
-      if (this.shippingDeet.mobilePhone == null) return null;
-      return this.shippingDeet.mobilePhone.length >= 1;
-    },
-
-    firstNameState() {
-      if (this.shippingDeet.firstName == null) return null;
-      return this.shippingDeet.firstName.length >= 1;
-    },
-
-    address1State() {
-      if (this.shippingDeet.addressLine1 == null) return null;
-      return this.shippingDeet.addressLine1.length > 0;
-    },
-
-    stateState() {
-      if (this.shippingDeet.state == null) return null;
-      return this.shippingDeet.state.length > 0;
-    },
-
-    zipState() {
-      if (this.shippingDeet.zipCode == null) return null;
-      return this.shippingDeet.zipCode.length > 0;
-    },
-
-    countryState() {
-      if (this.shippingDeet.country == null) return null;
-      return this.shippingDeet.country.length > 0;
-    },
-  },
-};
+  }
+}
 </script>
 
 <style lang="scss" scoped>

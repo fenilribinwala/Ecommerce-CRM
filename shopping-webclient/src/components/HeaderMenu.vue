@@ -1,30 +1,27 @@
 <template>
   <div id="header-menu">
-    <b-navbar
+    <BNavbar
       toggleable="md"
       fixed="top"
       class="header-color header-width"
       type="light"
       :style="headerStyle"
     >
-      <button target="nav_collapse" @click="burgerClick()" class="d-sm-block d-md-none burger">
+      <button target="nav_collapse" @click="burgerClick" class="d-sm-block d-md-none burger">
         <span class="navbar-toggler-icon"></span>
       </button>
-
-      <b-navbar-brand to="/">
+      <BNavbarBrand to="/">
         <img
-          src="@/assets/logo_transparent_blue_black.png"
+          src="../assets/logo_transparent_blue_black.png"
           alt="VENIQA"
           width="125px"
           style="padding: 0.5rem 0rem;"
         >
-      </b-navbar-brand>
-
-      <b-nav-item class="d-xs-block d-sm-block d-md-none" @click="$emit('openCart')">
+      </BNavbarBrand>
+      <BNavItem class="d-xs-block d-sm-block d-md-none" @click="emit('openCart')">
         <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-        <b-badge :pill="true" variant="danger">{{totalOrders}}</b-badge>
-      </b-nav-item>
-
+        <BBadge pill variant="danger">{{totalOrders}}</BBadge>
+      </BNavItem>
       <div class="mobile-search-bar d-xs-block d-sm-block d-md-none">
         <input
           type="text"
@@ -32,22 +29,21 @@
           placeholder="Search for products"
           v-model="searchTerm"
           style="width: 100%"
-          @keyup.enter="searchProduct()"
+          @keyup.enter="searchProduct"
           @keydown.esc="showSearch = false"
         >
       </div>
-
       <transition
         name="shipping-form-anim"
-        enter-active-class="animated slideInLeft slower"
-        leave-active-class="animated slideOutLeft slower"
+        enter-active-class="animate__animated animate__slideInLeft animate__slower"
+        leave-active-class="animate__animated animate__slideOutLeft animate__slower"
       >
-        <b-collapse is-nav id="nav_collapse" class="collapsible-content">
-          <b-navbar-nav class="ml-auto">
+        <BCollapse is-nav id="nav_collapse" class="collapsible-content">
+          <BNavbarNav class="ms-auto">
             <transition
               name="shipping-form-anim"
-              enter-active-class="animated fadeInRight faster"
-              leave-active-class="animated fadeOutLeft faster"
+              enter-active-class="animate__animated animate__fadeInRight animate__faster"
+              leave-active-class="animate__animated animate__fadeOutLeft animate__faster"
             >
               <input
                 type="text"
@@ -55,7 +51,7 @@
                 placeholder="Search for products"
                 v-if="showSearch"
                 v-model="searchTerm"
-                @keyup.enter="searchProduct()"
+                @keyup.enter="searchProduct"
                 @keydown.esc="showSearch = false"
               >
             </transition>
@@ -67,158 +63,149 @@
                 icon="search"
               />
             </div>
-
-            <b-nav-item @click="openCategory('Women')" class="veniqa-nav d-none d-md-block">Women</b-nav-item>
-            <b-nav-item @click="openCategory('Men')" class="veniqa-nav d-none d-md-block">Men</b-nav-item>
-
-            <b-nav-item
+            <BNavItem @click="openCategory('Women')" class="veniqa-nav d-none d-md-block">Women</BNavItem>
+            <BNavItem @click="openCategory('Men')" class="veniqa-nav d-none d-md-block">Men</BNavItem>
+            <BNavItem
               class="veniqa-nav d-none d-md-block"
               to="/login"
               v-if="!isSessionActive"
-            >Login</b-nav-item>
-
-            <b-nav-item-dropdown
+            >Login</BNavItem>
+            <BNavItemDropdown
               class="veniqa-nav d-none d-md-block"
               :text="nameOfUser"
               right
               v-else
             >
-              <b-dropdown-item href="#">Profile</b-dropdown-item>
-              <b-dropdown-item v-if="isSessionActive" to="/orders">Orders</b-dropdown-item>
-              <b-dropdown-item @click="logoutClicked()">Logout</b-dropdown-item>
-            </b-nav-item-dropdown>
-            <!-- </b-nav-item> -->
-            <!-- <b-nav-item class="veniqa-nav d-none d-md-block" to="/checkout"> -->
-            <b-nav-item class="veniqa-nav d-none d-md-block" @click="$emit('openCart')">
+              <BDropdownItem href="#">Profile</BDropdownItem>
+              <BDropdownItem v-if="isSessionActive" to="/orders">Orders</BDropdownItem>
+              <BDropdownItem @click="logoutClicked">Logout</BDropdownItem>
+            </BNavItemDropdown>
+            <BNavItem class="veniqa-nav d-none d-md-block" @click="emit('openCart')">
               <font-awesome-icon icon="shopping-cart" style="font-size: 1.2em"/>
-              <b-badge :pill="true" variant="danger">{{totalOrders}}</b-badge>
-            </b-nav-item>
-          </b-navbar-nav>
-
+              <BBadge pill variant="danger">{{totalOrders}}</BBadge>
+            </BNavItem>
+          </BNavbarNav>
           <!-- Displays only when collapsible option is true -->
-          <div class="sidenav ml-auto d-md-none">
+          <div class="sidenav ms-auto d-md-none">
             <left-menu-view/>
-            <!-- <div class="align-right close-icon">
-              <font-awesome-icon v-b-toggle.nav_collapse icon="times"/>
-            </div>
-            <b-nav-item class="align-left collapse-nav" to="/vendor/amazon">Men's Clothing
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav" to="/vendor/amazon">Women's Clothing
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav">Profile
-              <hr>
-            </b-nav-item>
-            <b-nav-item class="align-left collapse-nav" to="/login" v-if="!isSessionActive">Login</b-nav-item>
-            <hr>
-            <b-nav-item class="align-left collapse-nav" v-if="isSessionActive" to="/orders">Orders</b-nav-item>
-            <b-nav-item
-              class="d-none d-md-block collapse-nav"
-              to="/login"
-              v-if="!isSessionActive"
-            >Login</b-nav-item>
-            <b-nav-item class="align-left collapse-nav" @click="logoutClicked()" v-else>Logout</b-nav-item>-->
           </div>
           <!-- End of Collapsible view display -->
-        </b-collapse>
+        </BCollapse>
       </transition>
-    </b-navbar>
+    </BNavbar>
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useShippingStore } from '@/stores/shippingStore';
+import { useNotification } from '@kyvg/vue3-notification';
 import LeftMenuView from '@/components/LeftMenu.vue';
+import {
+  BNavbar,
+  BNavbarBrand,
+  BNavItem,
+  BCollapse,
+  BNavbarNav,
+  BNavItemDropdown,
+  BDropdownItem,
+  BBadge
+} from 'bootstrap-vue-3';
 
-export default {
-  name: 'HeaderMenu',
-  components: {
-    LeftMenuView,
+// Define props and emits
+const props = defineProps({
+  rightSidebarVisible: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
-  props: {
-    rightSidebarVisible: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
+  sidebarWidth: {
+    type: Number,
+    required: false,
+    default: 300,
+  },
+});
 
-    sidebarWidth: {
-      type: Number,
-      required: false,
-      default: 300,
-    },
-  },
-  data() {
-    return {
-      scrollPos: null,
-      showSearch: false,
-      searchTerm: '',
-    };
-  },
-  methods: {
-    burgerClick() {
-      this.$emit('activateSidebar');
-    },
-    openCategory(cat) {
-      this.$router.push({
-        path: '/search',
-        query: {
-          category: cat,
-        },
-      });
-    },
-    searchProduct() {
-      // this.$store.commit('searchStore/setSearchTerm', this.searchTerm);
-      this.$router.push({
-        path: '/search',
-        query: {
-          term: this.searchTerm,
-        },
-      });
-    },
-    async logoutClicked() {
-      try {
-        await this.$store.dispatch('authStore/logout');
-        this.$notify({
-          group: 'all',
-          type: 'success',
-          text: 'You have been successfully logged out.',
-        });
-        this.$store.commit('cartStore/resetOrders');
-        this.$store.commit('shippingStore/resetAddresses');
-        this.$router.push('/');
-      } catch (err) {
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text: 'Sorry but we could not log you out at the moment.',
-        });
-      }
-    },
-  },
+const emit = defineEmits(['activateSidebar', 'openCart']);
 
-  computed: {
-    nameOfUser() {
-      return this.$store.getters['authStore/getFirstName'];
-    },
-    totalOrders() {
-      return this.$store.getters['cartStore/getTotalItems'];
-    },
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-    }),
+// Initialize stores and router
+const router = useRouter();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const { notify } = useNotification();
 
-    headerStyle() {
-      return {
-        'margin-right': this.rightSidebarVisible
-          ? `${this.sidebarWidth}px`
-          : '0px',
-        // 'min-width': '100%'
-      };
-    },
-  },
+// Reactive state
+const scrollPos = ref(null);
+const showSearch = ref(false);
+const searchTerm = ref('');
+
+// Methods
+const burgerClick = () => {
+  emit('activateSidebar');
 };
+
+const openCategory = (cat) => {
+  router.push({
+    path: '/search',
+    query: {
+      category: cat,
+    },
+  });
+};
+
+const searchProduct = () => {
+  router.push({
+    path: '/search',
+    query: {
+      term: searchTerm.value,
+    },
+  });
+};
+
+const logoutClicked = async () => {
+  try {
+    await authStore.logout();
+    notify({
+      group: 'all',
+      type: 'success',
+      text: 'You have been successfully logged out.',
+    });
+    cartStore.resetOrders();
+    shippingStore.resetAddresses();
+    router.push('/');
+  } catch (err) {
+    notify({
+      group: 'all',
+      type: 'error',
+      text: 'Sorry but we could not log you out at the moment.',
+    });
+  }
+};
+
+// Computed properties
+const nameOfUser = computed(() => {
+  return authStore.getFirstName;
+});
+
+const totalOrders = computed(() => {
+  return cartStore.getTotalItems;
+});
+
+const isSessionActive = computed(() => {
+  return authStore.isSessionActive;
+});
+
+const headerStyle = computed(() => {
+  return {
+    'margin-right': props.rightSidebarVisible
+      ? `${props.sidebarWidth}px`
+      : '0px',
+  };
+});
 </script>
 
 <style lang="scss">
@@ -229,7 +216,6 @@ export default {
       width: 100%;
     }
   }
-
   .mobile-search-bar {
     padding: 10px 0px;
     width: 100%;
@@ -276,10 +262,8 @@ export default {
 .header-color {
   background-color: white;
   // color: white !important;
-
   transition: margin-right 0.5s;
 }
-
 .veniqa-nav {
   padding: 5px 10px;
   margin-left: 2rem;
@@ -298,12 +282,10 @@ export default {
 .modal-backdrop.show {
   opacity: 0.7 !important;
 }
-
 .burger {
   border: 0;
   background: none;
 }
-
 .navbar-override {
   width: 90%;
   margin-left: auto;

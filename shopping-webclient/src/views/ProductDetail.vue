@@ -2,107 +2,102 @@
   <div class="product-detail">
     <div class="space"></div>
     <div v-if="product != null">
-      <p class="align-left">Shop &nbsp; / &nbsp; {{product.name}}</p>
+      <p class="align-left">Shop &nbsp; / &nbsp; {{ product.name }}</p>
       <hr>
-      <b-row>
-        <b-col md="7" class="beginner">
+      <BRow>
+        <BCol md="7" class="beginner">
           <div>
             <product-image-gallery
               :base-images="productImages"
               :base-zoomer-options="zoomerOptions"
             />
           </div>
-        </b-col>
-        <b-col md="5">
-          <product-description :data="product"/>
-        </b-col>
-      </b-row>
+        </BCol>
+        <BCol md="5">
+          <ProductDescription :data="product"/>
+        </BCol>
+      </BRow>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import {ref, onMounted} from 'vue';
+import {useNotification} from '@kyvg/vue3-notification'; // Assuming Vue 3 notification plugin
 import ProxyUrls from '@/constants/ProxyUrls';
 import ProductImageGallery from '@/components/product-detail/ProductImageGallery.vue';
 import ProductDescription from '@/components/product-detail/ProductDescription.vue';
+import axiosInstance from '../plugins/axios';
 
-export default {
-  name: 'ProductDetail',
-  components: {
-    ProductImageGallery,
-    ProductDescription,
+// Component props
+const props = defineProps({
+  productId: {
+    type: String,
+    required: true,
   },
-  props: {
-    productId: {
-      type: String,
-      required: true,
-    },
-  },
+});
 
-  data() {
-    return {
-      product: null,
-      zoomerOptions: {
-        zoomFactor: 1.5,
-        pane: 'container',
-        hoverDelay: 300,
-        namespace: 'zoomer',
-        move_by_click: false,
-        scroll_items: 4,
-        choosed_thumb_border_color: '#2c3e50',
-      },
+// Reactive state
+const product = ref(null);
+const zoomerOptions = ref({
+  zoomFactor: 1.5,
+  pane: 'container',
+  hoverDelay: 300,
+  namespace: 'zoomer',
+  move_by_click: false,
+  scroll_items: 4,
+  choosed_thumb_border_color: '#2c3e50',
+});
 
-      productImages: {
-        normal_size: [],
-      },
-    };
-  },
+const productImages = ref({
+  normal_size: [],
+});
 
-  async created() {
-    if (this.productId) {
-      try {
-        const { data } = await this.$axios({
-          url: ProxyUrls.getProductDefinitionUrl + this.productId,
-          type: 'get',
-        });
-        if (data) {
-          data.responseData.counts = 0;
-          this.product = data.responseData;
-          this.product.detailedImageUrls.forEach((picture, pid) => {
-            this.productImages.normal_size.push({
-              id: pid,
-              url: picture,
-            });
+// Notification system
+const {notify} = useNotification();
+
+// Fetch product details
+const fetchProductDetails = async () => {
+  if (props.productId) {
+    try {
+      const {data} = await axiosInstance({
+        url: ProxyUrls.getProductDefinitionUrl + props.productId,
+        method: 'get', // Note: changed 'type' to 'method' which is more standard
+      });
+
+      if (data) {
+        data.responseData.counts = 0;
+        product.value = data.responseData;
+
+        // Process product images
+        product.value.detailedImageUrls.forEach((picture, pid) => {
+          productImages.value.normal_size.push({
+            id: pid,
+            url: picture,
           });
-
-          this.product.customValues = {};
-
-          for (
-            let i = 0;
-            i < this.product.customizationOptions.customizations.length;
-            i += 1
-          ) {
-            const attrib = this.product.customizationOptions.customizations[i];
-            // if (attrib.type === "Colors") {
-            //   this.product.customValues[attrib.key] =
-            //     attrib.values.length > 0 ? attrib.values[0].hexValue : "";
-            // } else {
-            this.product.customValues[attrib.key] = attrib.values.length > 0 ? attrib.values[0] : '';
-            // }
-          }
-        }
-      } catch (err) {
-        console.log(err);
-        this.$notify({
-          group: 'all',
-          type: 'error',
-          text:
-            'Product detail could not be retrieved at the moment. Please try again later.',
         });
+
+        // Process custom values
+        product.value.customValues = {};
+        for (let i = 0; i < product.value.customizationOptions.customizations.length; i += 1) {
+          const attrib = product.value.customizationOptions.customizations[i];
+          product.value.customValues[attrib.key] =
+            attrib.values.length > 0 ? attrib.values[0] : '';
+        }
       }
+    } catch (err) {
+      console.log(err);
+      notify({
+        group: 'all',
+        type: 'error',
+        text: 'Product detail could not be retrieved at the moment. Please try again later.',
+      });
     }
-  },
+  }
 };
+
+// Lifecycle hook - replaces created()
+onMounted(fetchProductDetails);
 </script>
 
 <style lang="scss" scoped>

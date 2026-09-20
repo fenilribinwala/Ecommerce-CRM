@@ -22,70 +22,64 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SideMenuView',
-  props: {
-    sidebar: {
-      required: true,
-    },
+<script setup>
+import { useRouter } from 'vue-router';
+import _ from 'lodash';
 
-    category: {
-      required: false,
-      default: '',
-      type: String,
-    },
-
-    subCategory: {
-      required: false,
-      default: '',
-      type: String,
-    },
-
-    term: {
-      required: false,
-      default: '',
-      type: String,
-    },
+// Define props
+const props = defineProps({
+  sidebar: {
+    required: true,
   },
-
-  methods: {
-    openSubCategory(subcat, keyy) {
-      const q = {};
-      if (this.term) q.term = this.term;
-      q.category = this.category;
-      q.subCategory = subcat.subcategory;
-      this.$router.push({
-        path: '/search',
-        query: {
-          term: this.term,
-          category: this.category.length > 0 ? this.category : keyy,
-          subCategory: subcat.subcategory,
-        },
-      });
-    },
-
-    shouldProductDisplay(catgry, subcats) {
-      if (this.category.length <= 0) {
-        if (
-          this.subCategory.length > 0
-          && _.findIndex(subcats, v => v.subcategory === this.subCategory) >= 0
-        ) {
-          return true;
-        }
-        if (this.subCategory.length <= 0) return true;
-        return false;
-      }
-      if (this.category === catgry) return true;
-      return false;
-    },
-
-    activeSubCategory(subCat) {
-      return subCat === this.subCategory;
-    },
+  category: {
+    required: false,
+    default: '',
+    type: String,
   },
+  subCategory: {
+    required: false,
+    default: '',
+    type: String,
+  },
+  term: {
+    required: false,
+    default: '',
+    type: String,
+  },
+});
 
-  computed: {},
+// Initialize router
+const router = useRouter();
+
+// Methods
+const openSubCategory = (subcat, keyy) => {
+  router.push({
+    path: '/search',
+    query: {
+      term: props.term,
+      category: props.category.length > 0 ? props.category : keyy,
+      subCategory: subcat.subcategory,
+    },
+  });
+};
+
+const shouldProductDisplay = (catgry, subcats) => {
+  if (props.category.length <= 0) {
+    if (
+      props.subCategory.length > 0
+      && _.findIndex(subcats, v => v.subcategory === props.subCategory) >= 0
+    ) {
+      return true;
+    }
+    if (props.subCategory.length <= 0) return true;
+    return false;
+  }
+  if (props.category === catgry) return true;
+  return false;
+};
+
+const activeSubCategory = (subCat) => {
+  return subCat === props.subCategory;
 };
 </script>
 
@@ -102,7 +96,6 @@ li {
   margin-bottom: 5px;
   margin-top: 5px;
 }
-
 .bold {
   font-weight: bold;
 }

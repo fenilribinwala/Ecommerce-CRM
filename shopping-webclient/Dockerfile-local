@@ -16,8 +16,6 @@ RUN npm install -g npm@latest && \
 # Set environment variables
 ENV PYTHON=/usr/bin/python3
 ENV NODE_GYP_FORCE_PYTHON=/usr/bin/python3
-ENV SASS_BINARY_SITE=https://github.com/sass/node-sass/releases/download
-ENV NODE_SASS_SKIP_BINARY_DOWNLOAD_FOR_CI=true
 
 # Copy package files
 COPY package*.json /app/
@@ -25,8 +23,8 @@ COPY package*.json /app/
 # Remove any existing node_modules and package-lock
 RUN rm -rf node_modules package-lock.json
 
-# Install dependencies with vue-loading-spinner
-RUN npm install --legacy-peer-deps --no-optional --force --ignore-scripts
+# Install dependencies with Vue 3 migration flags
+RUN npm install --legacy-peer-deps --force
 
 # Copy the rest of the application
 COPY . /app/

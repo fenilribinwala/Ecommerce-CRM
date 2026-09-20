@@ -84,108 +84,116 @@
         class="align-left">Phone number invalid.</b-form-invalid-feedback>
     </b-form-group>
 
-    <vue-recaptcha @verify="onVerify" @expired="onExpired" :sitekey="recaptchaKey"></vue-recaptcha>
-    <p class="info align-left">Please enter the captcha before loggin in.</p>
+    <p class="info align-left" v-if="!recaptchaVerified">Please complete the reCAPTCHA to register.</p>
+    <p class="info align-left success-text" v-else>reCAPTCHA verified ✓</p>
 
     <div class="modal-bottom"></div>
-    <b-btn class="register-button" @click="registerClicked()">Register</b-btn>
+    <BButton class="register-button" @click="registerClicked()">Register</BButton>
 
     <p class="register-class" @click="loginNavigation()">Already a User? Go back to login.</p>
     <div class="modal-bottom"></div>
   </div>
 </template>
 
-<script>
-import VueRecaptcha from 'vue-recaptcha';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useReCaptcha } from 'vue-recaptcha-v3';
 import Config from '@/config.json';
 
-export default {
-  name: 'RegisterComponent',
-  components: {
-    VueRecaptcha
-  },
-  data() {
-    return {
-      username: '',
-      password: '',
-      confirmPassword: '',
-      phone: '',
-      name: '',
+// Define emits
+const emit = defineEmits(['register', 'loginNav']);
 
-      recaptchaKey: '',
-      captchaResp: ''
-    };
-  },
+// Setup recaptcha
+const { executeRecaptcha, recaptchaLoaded } = useReCaptcha();
 
-  created() {
-    this.recaptchaKey = Config.RECAPTCHA;
-  },
+// Reactive data
+const username = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const phone = ref('');
+const name = ref('');
+const captchaResp = ref('');
+const recaptchaVerified = ref(false);
 
-  methods: {
-    async onVerify(response) {
-      this.captchaResp = response;
-    },
-    onExpired() {
-      // this.resetRecaptcha();
-      this.captchaResp = '';
-    },
+// Computed properties
+const usernameState = computed(() => {
+  if (username.value.length === 0) return null;
+  return validEmail(username.value);
+});
 
-    registerClicked() {
-      if (
-        this.usernameState
-        && this.passwordState
-        && this.confirmPasswordState
-        && this.phoneState
-        && this.nameState
-        && this.captchaResp.length > 0
-      ) {
-        this.$emit('register', {
-          email: this.username,
-          password: this.password,
-          phone: this.phone,
-          name: this.name,
-          recaptcha: this.captchaResp
-        });
-      }
-    },
+const passwordState = computed(() => {
+  if (password.value.length === 0) return null;
+  return password.value.length > 6;
+});
 
-    loginNavigation() {
-      this.$emit('loginNav');
-    },
+const confirmPasswordState = computed(() => {
+  if (confirmPassword.value.length === 0) return null;
+  return confirmPassword.value === password.value;
+});
 
-    validEmail(email) {
-      // eslint-disable-next-line
-      const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      return re.test(email);
-    }
-  },
-  computed: {
-    usernameState() {
-      if (this.username.length === 0) return null;
-      return this.validEmail(this.username);
-    },
+const phoneState = computed(() => {
+  if (phone.value.length === 0) return null;
+  return phone.value.length === 10;
+});
 
-    passwordState() {
-      if (this.password.length === 0) return null;
-      return this.password.length > 6;
-    },
+const nameState = computed(() => {
+  if (name.value.length === 0) return null;
+  return name.value.length > 0;
+});
 
-    confirmPasswordState() {
-      if (this.confirmPassword.length === 0) return null;
-      return this.confirmPassword === this.password;
-    },
+// Methods
+function validEmail(email) {
+  // eslint-disable-next-line
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}
 
-    phoneState() {
-      if (this.phone.length === 0) return null;
-      return this.phone.length === 10;
-    },
-
-    nameState() {
-      if (this.name.length === 0) return null;
-      return this.name.length > 0;
-    }
+async function verifyRecaptcha() {
+  try {
+    await recaptchaLoaded();
+    const token = await executeRecaptcha('register');
+    captchaResp.value = token;
+    recaptchaVerified.value = true;
+    return token;
+  } catch (error) {
+    console.error('reCAPTCHA error:', error);
+    recaptchaVerified.value = false;
+    captchaResp.value = '';
+    return '';
   }
-};
+}
+
+async function registerClicked() {
+  if (!recaptchaVerified.value) {
+    await verifyRecaptcha();
+  }
+
+  if (
+    usernameState.value &&
+    passwordState.value &&
+    confirmPasswordState.value &&
+    phoneState.value &&
+    nameState.value &&
+    captchaResp.value.length > 0
+  ) {
+    emit('register', {
+      email: username.value,
+      password: password.value,
+      phone: phone.value,
+      name: name.value,
+      recaptcha: captchaResp.value
+    });
+  }
+}
+
+function loginNavigation() {
+  emit('loginNav');
+}
+
+// Initialize recaptcha on component mount
+onMounted(async () => {
+  // We'll verify recaptcha on register button click
+});
 </script>
 
 <style lang="scss">

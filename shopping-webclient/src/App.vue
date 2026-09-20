@@ -1,136 +1,139 @@
 <template>
   <div id="app">
-    <notifications
+    <Notifications
       group="all"
       classes="vue-notification main-notification"
       width="100%"
       position="bottom center"
     />
-    <notifications
+    <Notifications
       group="toast"
       class="toast-noti"
       classes="vue-notification toast-notification"
       position="top right"
     />
-    <div v-if="isLoading">
-      <loading-spinner class="spinner" :size="150" color="#136a8a"/>
+    <div v-if="isLoading" class="spinner-overlay">
+      <div class="fingerprint-spinner"></div>
     </div>
 
     <router-view/>
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
-import { Spinner as LoadingSpinner } from 'vue-loading-spinner';
-import { eventHub } from '@/utils/EventHub';
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, shallowRef } from 'vue';
+import { useRouter } from 'vue-router';
 import moment from 'moment';
+import { useAuthStore } from './stores/authStore';
+import { useCartStore } from './stores/cartStore';
+import { useShippingStore } from './stores/shippingStore';
+import eventHub from "./utils/EventHub";
+import { Loading } from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css';
 
-export default {
-  name: 'app',
-  components: {
-    LoadingSpinner,
-  },
+// Reactive state
+const refCount = ref(0);
+const isLoading = ref(false);
 
-  async created() {
-    eventHub.$on('before-request', this.setLoading);
-    eventHub.$on('request-error', this.unsetLoading);
-    eventHub.$on('after-response', this.unsetLoading);
-    eventHub.$on('response-error', this.unsetLoading);
+const router = useRouter();
+// Initialize stores
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const shippingStore = useShippingStore();
+const loadingComponent = shallowRef(Loading);
 
-    await this.$store.dispatch('authStore/initiateAppSession');
-    if (this.isSessionActive) {
-      this.initiateApp();
-    } else {
-      this.$store.commit('shippingStore/resetAddresses');
-      this.$store.commit('cartStore/resetOrders');
+// Computed properties
+const isSessionActive = computed(() => authStore.isSessionActive);
+const shippingMethod = computed(() => shippingStore.shippingMethod);
+const selectedAddress = computed(() => shippingStore.getSelectedAddress);
+const checkoutInitiated = computed(() => cartStore.checkoutInitiated);
+
+// Methods
+const initiateApp = async () => {
+  try {
+    await cartStore.getCart();
+    await shippingStore.addressAction({
+      address: null,
+      action: 'get',
+    });
+
+    if (checkoutInitiated.value) {
+      const reqObj = {
+        address: selectedAddress.value,
+        shippingMethod: shippingMethod.value,
+      };
+      await cartStore.createCheckout(reqObj);
     }
-  },
-
-  data() {
-    return {
-      refCount: 0,
-      isLoading: false,
-    };
-  },
-
-  beforeDestroy() {
-    eventHub.$off('before-request', this.setLoading);
-    eventHub.$off('request-error', this.unsetLoading);
-    eventHub.$off('after-response', this.unsetLoading);
-    eventHub.$off('response-error', this.unsetLoading);
-  },
-
-  methods: {
-    async initiateApp() {
-      try {
-        await this.$store.dispatch('cartStore/getCart');
-        await this.$store.dispatch('shippingStore/addressAction', {
-          address: null,
-          action: 'get',
-        });
-
-        if (this.checkoutInitiated) {
-          const reqObj = {
-            address: this.selectedAddress,
-            shippingMethod: this.shippingMethod,
-          };
-
-          await this.$store.dispatch('cartStore/createCheckout', reqObj);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    setLoading() {
-      this.refCount += 1;
-      this.isLoading = true;
-    },
-
-    checkSessionTimeout() {
-      const dt = localStorage.getItem('sessionDT');
-      if (!dt) {
-        return false;
-      }
-      const diff = moment.duration(moment().diff(moment(dt)));
-      if (diff.asMinutes() >= 30) return false;
-
-      localStorage.setItem('sessionDT', moment().format());
-      return true;
-    },
-
-    unsetLoading() {
-      if (this.isSessionActive) {
-        const isActive = this.checkSessionTimeout();
-
-        if (!isActive) {
-          console.log('This is also happening while unsetting loading');
-          this.$store.commit('shippingStore/resetAddresses');
-          this.$store.commit('cartStore/resetOrders');
-          this.$store.commit('authStore/logoutUser');
-        }
-      }
-
-      if (this.refCount > 0) {
-        this.refCount -= 1;
-        this.isLoading = this.refCount > 0;
-      }
-    },
-  },
-
-  computed: {
-    ...mapGetters({
-      isSessionActive: 'authStore/isSessionActive',
-      shippingMethod: 'shippingStore/shippingMethod',
-      selectedAddress: 'shippingStore/getSelectedAddress',
-      checkoutInitiated: 'cartStore/checkoutInitiated',
-    }),
-  },
+  } catch (error) {
+    console.log(error);
+  }
 };
+
+const setLoading = () => {
+  refCount.value += 1;
+  isLoading.value = true;
+};
+
+const checkSessionTimeout = () => {
+  const dt = localStorage.getItem('sessionDT');
+  if (!dt) {
+    return false;
+  }
+  const diff = moment.duration(moment().diff(moment(dt)));
+  if (diff.asMinutes() >= 30) return false;
+  localStorage.setItem('sessionDT', moment().format());
+  return true;
+};
+
+const unsetLoading = () => {
+  if (isSessionActive.value) {
+    const isActive = checkSessionTimeout();
+    if (!isActive) {
+      console.log('This is also happening while unsetting loading');
+      shippingStore.resetAddresses();
+      cartStore.resetOrders();
+      authStore.logoutUser();
+    }
+  }
+
+  if (refCount.value > 0) {
+    refCount.value -= 1;
+    isLoading.value = refCount.value > 0;
+  }
+};
+
+onMounted(async () => {
+  eventHub.on('before-request', setLoading);
+  eventHub.on('request-error', unsetLoading);
+  eventHub.on('after-response', unsetLoading);
+  eventHub.on('response-error', unsetLoading);
+
+  await authStore.initiateAppSession();
+
+  if (isSessionActive.value) {
+    initiateApp();
+  } else {
+    shippingStore.resetAddresses();
+    cartStore.resetOrders();
+  }
+});
+
+onBeforeUnmount(() => {
+  // Clean up event listeners
+  eventHub.off('before-request', setLoading);
+  eventHub.off('request-error', unsetLoading);
+  eventHub.off('after-response', unsetLoading);
+  eventHub.off('response-error', unsetLoading);
+});
 </script>
 
-<style>
+<style lang="scss">
 @import url('https://fonts.googleapis.com/css?family=Karla');
+@import './assets/css/global.scss';
+@import './assets/css/sidebar.scss';
+@import './assets/css/overrides.scss';
+@import './assets/css/hover.css';
+@import './assets/css/drift-basic.css';
 
 #app {
   font-family: 'Quicksand','Raleway', sans-serif;
@@ -176,5 +179,33 @@ body {
   width: 100% !important;
   z-index: 10000 !important;
   background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.fingerprint-spinner {
+  width: 64px;
+  height: 64px;
+  border: 8px solid #136a8a;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

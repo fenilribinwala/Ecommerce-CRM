@@ -8,8 +8,8 @@
       <p v-if="forgotEnabled">Please enter your email to reset the password.</p>
     </div>
 
-    <b-form-group>
-      <b-form-input
+    <BFormGroup>
+      <BFormInput
         id="username"
         type="email"
         name="username"
@@ -17,150 +17,135 @@
         v-model="username"
         placeholder="Enter Email"
         aria-describedby="usernameFeedback"
-      ></b-form-input>
-      <b-form-invalid-feedback id="usernameFeedback" class="align-left">
-        <!-- This will only be shown if the preceeding input has an invalid state -->
+        class="form-control"
+      ></BFormInput>
+      <BFormInvalidFeedback id="usernameFeedback" class="text-start">
         Enter a valid email address
-      </b-form-invalid-feedback>
-    </b-form-group>
+      </BFormInvalidFeedback>
+    </BFormGroup>
 
-    <b-form-group>
-      <b-form-input
+    <BFormGroup>
+      <BFormInput
         v-if="!forgotEnabled"
         type="password"
         name="password"
         v-model="password"
-        @keyup.native.enter="loginClicked()"
+        @keyup.enter="loginClicked"
         placeholder="Enter Password"
         aria-describedby="passwordFeedback"
-      ></b-form-input>
-      <!-- <b-form-invalid-feedback id="passwordFeedback">Enter at least 6 characters.</b-form-invalid-feedback> -->
-    </b-form-group>
+        class="form-control"
+      ></BFormInput>
+      <!-- <BFormInvalidFeedback id="passwordFeedback" class="text-start">Enter at least 6 characters.</BFormInvalidFeedback> -->
+    </BFormGroup>
     <!-- <vue-recaptcha @verify="onVerify" @expired="onExpired" :sitekey="recaptchaKey"></vue-recaptcha> -->
-    <p class="info align-left">Please enter the captcha before loggin in.</p>
+    <p class="info text-start">Please enter the captcha before loggin in.</p>
 
-    <p class="forget-password" v-if="!forgotEnabled" @click="forgetPassword()">Forgot Password?</p>
+    <p class="forget-password" v-if="!forgotEnabled" @click="forgetPassword">Forgot Password?</p>
 
-    <b-btn class="login-button" v-if="!forgotEnabled" @click="loginClicked()">Login</b-btn>
-    <b-btn class="login-button" v-if="forgotEnabled" @click="resetPassword()">Reset Password</b-btn>
+    <BButton class="login-button w-100" v-if="!forgotEnabled" @click="loginClicked">Login</BButton>
+    <BButton class="login-button w-100" v-if="forgotEnabled" @click="resetPassword">Reset Password</BButton>
 
-    <p class="register-class" @click="register()">New User? Register here.</p>
+    <p class="register-class" @click="register">New User? Register here.</p>
     <div class="modal-bottom"></div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axiosInstance from '../../plugins/axios';
 import ProxyUrl from '@/constants/ProxyUrls';
 import Config from '@/config.json';
 
-export default {
-  name: 'LoginComponent',
-  data() {
-    return {
-      username: '',
-      password: '',
-      forgotEnabled: false,
-      recaptchaKey: '',
-      captchaResp: '',
-    };
-  },
+const emit = defineEmits(['login', 'register', 'close']);
 
-  created() {
-    this.recaptchaKey = Config.RECAPTCHA;
-  },
+const username = ref('');
+const password = ref('');
+const forgotEnabled = ref(false);
+const recaptchaKey = ref('');
+const captchaResp = ref('');
 
-  methods: {
-    async onVerify(response) {
-      this.captchaResp = response;
-    },
-    onExpired() {
-      // this.resetRecaptcha();
-      this.captchaResp = '';
-    },
+onMounted(() => {
+  recaptchaKey.value = Config.RECAPTCHA;
+});
 
-    validEmail(email) {
-      // eslint-disable-next-line
-      const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-      return re.test(email);
-    },
+function onVerify(response) {
+  captchaResp.value = response;
+}
+function onExpired() {
+  captchaResp.value = '';
+}
 
-    forgetPassword() {
-      this.forgotEnabled = true;
-      this.password = '';
-    },
+function validEmail(email) {
+  // eslint-disable-next-line
+  const re = /^(([^<>()\[\]\\.,;:\s@\"]+(\.[^<>()\[\]\\.,;:\s@\"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}
 
-    // async captchaValidate() {
-    //   try {
-    //     let {data} = await this.$axios({
-    //       headers: {
-    //         'Access-Control-Allow-Origin': '*',
-    //       },
-    //       url: ProxyUrl.recaptcha,
-    //       method: 'post',
-    //       params: {
-    //         secret: Config.RECAPTCHA_SECRET,
-    //         response: this.captchaResp,
-    //       }
-    //     });
+function forgetPassword() {
+  forgotEnabled.value = true;
+  password.value = '';
+}
 
-    //     if(data && data.success){
-    //       return true;
-    //     }else return false;
-    //   } catch (error) {
-    //     return false;
-    //   }
+// async function captchaValidate() {
+//   try {
+//     let {data} = await axiosInstance({
+//       headers: {
+//         'Access-Control-Allow-Origin': '*',
+//       },
+//       url: ProxyUrl.recaptcha,
+//       method: 'post',
+//       params: {
+//         secret: Config.RECAPTCHA_SECRET,
+//         response: captchaResp.value,
+//       }
+//     });
+//     if(data && data.success){
+//       return true;
+//     }else return false;
+//   } catch (error) {
+//     return false;
+//   }
+// }
 
-    // },
+async function loginClicked() {
+  // let isValidated = await captchaValidate();
+  if (usernameState.value) { // && captchaResp.value.length > 0
+    emit('login', {
+      email: username.value,
+      password: password.value,
+      recaptcha: captchaResp.value,
+    });
+  }
+}
 
-    async loginClicked() {
-      // let isValidated = await this.captchaValidate();
-      if (this.usernameState) { // } && this.captchaResp.length > 0) {
-        this.$emit('login', {
-          email: this.username,
-          password: this.password,
-          recaptcha: this.captchaResp,
-        });
+async function resetPassword() {
+  if (usernameState.value) {
+    try {
+      const { data } = await axiosInstance({
+        method: 'get',
+        url: ProxyUrl.forgotPassword + username.value,
+      });
+      if (data && data.httpStatus === 200) {
+        emit('close');
+        // Replace this with your notification system for Vue 3
+        // For example, use mitt or vue-toastification
+        // Here, just use alert as a placeholder
+        alert('The email was just sent. Please check your email and follow the instructions.');
       }
-    },
+    } catch (err) {
+      alert('The email could not be sent right now. Please try again later');
+    }
+  }
+}
 
-    async resetPassword() {
-      if (this.usernameState) {
-        try {
-          const { data } = await this.$axios({
-            method: 'get',
-            url: ProxyUrl.forgotPassword + this.username,
-          });
+function register() {
+  emit('register');
+}
 
-          if (data && data.httpStatus === 200) {
-            this.$emit('close');
-
-            this.$notify({
-              group: 'all',
-              type: 'success',
-              text: 'The email was just sent. Please check your email and follow the instructions.',
-            });
-          }
-        } catch (err) {
-          this.$notify({
-            group: 'all',
-            type: 'error',
-            text: 'The email could not be sent right now. Please try again later',
-          });
-        }
-      }
-    },
-
-    register() {
-      this.$emit('register');
-    },
-  },
-  computed: {
-    usernameState() {
-      if (this.username.length === 0) return null;
-      return this.validEmail(this.username);
-    },
-  },
-};
+const usernameState = computed(() => {
+  if (username.value.length === 0) return null;
+  return validEmail(username.value);
+});
 </script>
 
 <style lang='scss'>
@@ -170,9 +155,7 @@ export default {
 }
 
 .header {
-  // margin: 50px 0px;
   color: #267871;
-
   h2 {
     margin-bottom: 1em;
   }
@@ -185,5 +168,25 @@ export default {
 .register-class {
   padding-top: 20px;
   cursor: pointer;
+}
+
+.text-start {
+  text-align: left !important;
+}
+.w-100 {
+  width: 100% !important;
+}
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 </style>

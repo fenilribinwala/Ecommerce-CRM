@@ -40,213 +40,208 @@
         </div>
       </b-col>
     </b-row>
-
     <div :id="pane_id" class="pane-container d-none d-md-block"></div>
   </div>
 </template>
 
-<script>
+<script setup>
+import {computed, onBeforeUnmount, onMounted, onBeforeMount, ref, watch} from 'vue';
 // We need this specific version of working Drift-Zoom package.
 import Drift from '../../assets/drift-zoom/src/js/Drift';
 
 /**
  * Courtesy of akulubala from vue-product-zoomer
  */
-export default {
-  name: 'ProductImageGallery',
-  props: {
-    baseZoomerOptions: {
-      type: Object,
-      default() {
-        return {};
-      }
-    },
-    baseImages: {
-      type: Object,
-      required: true,
-      default() {
-        return {};
-      }
-    }
+const props = defineProps({
+  baseZoomerOptions: {
+    type: Object,
+    default: () => ({})
   },
-  data() {
-    return {
-      previewImg: {},
-      previewLargeImg: {},
-      thumbs: [],
-      normal_size: [],
-      large_size: [],
-      choosedThumb: {},
-      drift: null,
-      options: {
-        zoomFactor: 4,
-        pane: 'pane',
-        hoverDelay: 300,
-        namespace: 'container-zoomer',
-        move_by_click: true,
-        scroll_items: 4,
-        choosed_thumb_border_color: '#ff3d00',
-        move_button_style: 'chevron'
-      }
-    };
-  },
-  computed: {
-    zoomer_box() {
-      return `${this.options.namespace}-zoomer-box`;
-    },
-    pane_id() {
-      return `${this.options.namespace}-pane-container`;
-    },
-    move_button() {
-      return this.options.move_button_style === 'chevron'
-        ? {
-          left: 'chevron-left',
-          right: 'chevron-right'
-        }
-        : {
-          left: 'angle-double-left',
-          right: 'angle-double-right'
-        };
-    }
-  },
-  mounted() {
-    this.runImager();
-    window.addEventListener('resize', this.runImager);
-  },
+  baseImages: {
+    type: Object,
+    required: true,
+    default: () => ({})
+  }
+});
 
-  beforeDestroy() {
-    window.removeEventListener('resize', this.runImager);
-  },
+// Reactive state
+const previewImg = ref({});
+const previewLargeImg = ref({});
+const thumbs = ref([]);
+const normal_size = ref([]);
+const large_size = ref([]);
+const choosedThumb = ref({});
+const drift = ref(null);
+const options = ref({
+  zoomFactor: 4,
+  pane: 'pane',
+  hoverDelay: 300,
+  namespace: 'container-zoomer',
+  move_by_click: true,
+  scroll_items: 4,
+  choosed_thumb_border_color: '#ff3d00',
+  // move_button_style: 'chevron'
+});
 
-  ready() {
-    console.log('Running cause ready');
-  },
-  watch: {
-    choosedThumb(thumb) {
-      const matchNormalImg = this.normal_size.find(img => img.id === thumb.id);
-      const matchLargeImg = this.large_size.find(img => img.id === thumb.id);
-      this.previewLargeImg = Object.assign({}, matchLargeImg);
-      this.previewImg = Object.assign({}, matchNormalImg);
-      if (this.drift !== null) {
-        this.drift.setZoomImageURL(matchLargeImg.url);
-      }
+// Computed properties
+const zoomer_box = computed(() => `${options.value.namespace}-zoomer-box`);
+const pane_id = computed(() => `${options.value.namespace}-pane-container`);
+const move_button = computed(() =>
+  options.value.move_button_style === 'chevron'
+    ? {
+      left: 'chevron-left',
+      right: 'chevron-right'
     }
-  },
-  created() {
-    if (Object.keys(this.baseImages).length > 0) {
-      // eslint-disable-next-line
-      for (const key in this.baseImages) {
-        if (Object.prototype.hasOwnProperty.call(this.baseImages, key)) {
-          this[key] = this.baseImages[key];
-        }
-      }
+    : {
+      left: 'angle-double-left',
+      right: 'angle-double-right'
     }
+);
 
-    if (this.normal_size.length === 0) {
-      console.log('Product Zoomer Need Normal Size Image At Least!!!');
-      return;
-    }
-    if (this.thumbs.length === 0) {
-      this.thumbs = Object.assign([], this.normal_size);
-    }
-    if (this.large_size.length === 0) {
-      this.large_size = Object.assign([], this.normal_size);
-    }
-    // eslint-disable-next-line prefer-destructuring
-    this.choosedThumb = this.thumbs[0];
-
-    if (Object.keys(this.baseZoomerOptions).length > 0) {
-      // eslint-disable-next-line
-      for (const key in this.baseZoomerOptions) {
-        if (Object.prototype.hasOwnProperty.call(this.baseZoomerOptions, key)) {
-          const element = this.baseZoomerOptions[key];
-          this.options[key] = element;
-        }
-      }
-    }
-
-    if (
-      this.options.pane === 'container-round'
-      || this.options.pane === 'container'
-    ) {
-      this.options.hoverBoundingBox = false;
-    } else {
-      this.options.hoverBoundingBox = true;
-    }
-  },
-  methods: {
-    runImager() {
-      document
-        .querySelector(`.${this.zoomer_box} .thumb-list`)
-        .setAttribute(
-          'style',
-          `grid-template-columns: repeat(${this.baseZoomerOptions.scroll_items}, auto)`
-        );
-      const t = setInterval(() => {
-        if (document.readyState === 'complete') {
-          if (this.options.pane === 'container-round') {
-            this.options.inlinePane = true;
+// Methods
+const runImager = () => {
+  document
+    .querySelector(`.${zoomer_box.value} .thumb-list`)
+    .setAttribute(
+      'style',
+      `grid-template-columns: repeat(${props.baseZoomerOptions.scroll_items}, auto)`
+    );
+  const t = setInterval(() => {
+    if (document.readyState === 'complete') {
+      if (options.value.pane === 'container-round') {
+        options.value.inlinePane = true;
+      } else {
+        options.value.inlinePane = false;
+        options.value.paneContainer = document.getElementById(pane_id.value);
+        
+        // Get the exact position and dimensions of the preview image
+        const previewImage = document.querySelector(`.${zoomer_box.value} .preview-box img`);
+        if (previewImage) {
+          const imageRect = previewImage.getBoundingClientRect();
+          const pageRect = document.body.getBoundingClientRect();
+          
+          let customStyle = '';
+          if (options.value.pane === 'pane') {
+            // Position the zoom pane exactly over the preview image
+            customStyle = `width:${imageRect.width}px;height:${imageRect.height}px;left:${imageRect.left - pageRect.left}px;top:${imageRect.top - pageRect.top}px;`;
           } else {
-            this.options.inlinePane = false;
-            this.options.paneContainer = document.getElementById(this.pane_id);
-            const rect = document
-              .querySelector(`.${this.zoomer_box}`)
-              .getBoundingClientRect();
-            let customStyle = '';
-            if (this.options.pane === 'pane') {
-              customStyle = `width:${rect.width * 1.2}px;height:${
-                rect.height
-              }px;left:${rect.right}px;top:${0}px;`;
-            } else {
-              const rect1 = document
-                .querySelector('.preview-box')
-                .getBoundingClientRect();
-              const beginner = document
-                .querySelector('.beginner')
-                .getBoundingClientRect();
-              customStyle = `width:${rect1.width}px;height:${
-                rect1.height
-              }px;left:${rect1.x - beginner.x}px;top:${0}px;`;
-            }
-            this.options.paneContainer.setAttribute('style', customStyle);
+            // For container mode, position over the image as well
+            customStyle = `width:${imageRect.width}px;height:${imageRect.height}px;left:${imageRect.left - pageRect.left}px;top:${imageRect.top - pageRect.top}px;`;
           }
-
-          this.options.injectBaseStyles = true;
-          const previewImg = `.${this.zoomer_box} .preview-box img`;
-
-          this.drift = this.drift
-            ? this.drift
-            : new Drift(document.querySelector(previewImg), this.options);
-          clearInterval(t);
+          options.value.paneContainer.setAttribute('style', customStyle);
         }
-      }, 500);
-    },
-    moveThumbs(direction) {
-      const len = this.thumbs.length;
-      if (direction === 'right') {
-        const moveThumb = this.thumbs.splice(len - 1, 1);
-        this.thumbs = [moveThumb[0], ...this.thumbs];
-      } else {
-        const moveThumb = this.thumbs.splice(0, 1);
-        this.thumbs = [...this.thumbs, moveThumb[0]];
       }
-    },
-    chooseThumb(thumb, event) {
-      const eventType = event.type;
-      if (eventType === 'mouseover') {
-        if (this.options.move_by_click !== true) {
-          this.choosedThumb = thumb;
+      options.value.injectBaseStyles = true;
+      const previewImg = `.${zoomer_box.value} .preview-box img`;
+      drift.value = drift.value
+        ? drift.value
+        : new Drift(document.querySelector(previewImg), options.value);
+      clearInterval(t);
+    }
+  }, 500);
+};
+
+const moveThumbs = (direction) => {
+  const len = thumbs.value.length;
+  if (direction === 'right') {
+    const moveThumb = thumbs.value.splice(len - 1, 1);
+    thumbs.value = [moveThumb[0], ...thumbs.value];
+  } else {
+    const moveThumb = thumbs.value.splice(0, 1);
+    thumbs.value = [...thumbs.value, moveThumb[0]];
+  }
+};
+
+const chooseThumb = (thumb, event) => {
+  const eventType = event.type;
+  if (eventType === 'mouseover') {
+    if (options.value.move_by_click !== true) {
+      choosedThumb.value = thumb;
+    }
+  } else {
+    choosedThumb.value = thumb;
+  }
+};
+
+// Watch for changes to choosedThumb
+watch(choosedThumb, (thumb) => {
+  const matchNormalImg = normal_size.value.find(img => img.id === thumb.id);
+  const matchLargeImg = large_size.value.find(img => img.id === thumb.id);
+  previewLargeImg.value = Object.assign({}, matchLargeImg);
+  previewImg.value = Object.assign({}, matchNormalImg);
+  if (drift.value !== null) {
+    drift.value.setZoomImageURL(matchLargeImg.url);
+  }
+});
+
+// Initialize data
+const initializeData = () => {
+  if (Object.keys(props.baseImages).length > 0) {
+    for (const key in props.baseImages) {
+      if (Object.prototype.hasOwnProperty.call(props.baseImages, key)) {
+        // Need to handle arrays differently in Vue 3 refs
+        if (Array.isArray(props.baseImages[key])) {
+          // eslint-disable-next-line no-eval
+          eval(`${key}.value = props.baseImages[key]`);
         }
-      } else {
-        this.choosedThumb = thumb;
       }
     }
   }
+
+  if (normal_size.value.length === 0) {
+    console.log('Product Zoomer Need Normal Size Image At Least!!!');
+    return;
+  }
+
+  if (thumbs.value.length === 0) {
+    thumbs.value = [...normal_size.value];
+  }
+
+  if (large_size.value.length === 0) {
+    large_size.value = [...normal_size.value];
+  }
+
+  // Select first thumb
+  if (thumbs.value.length > 0) {
+    choosedThumb.value = thumbs.value[0];
+  }
+
+  if (Object.keys(props.baseZoomerOptions).length > 0) {
+    for (const key in props.baseZoomerOptions) {
+      if (Object.prototype.hasOwnProperty.call(props.baseZoomerOptions, key)) {
+        options.value[key] = props.baseZoomerOptions[key];
+        console.log(`Set ${key} to ${props.baseZoomerOptions[key]}`);
+      }
+    }
+  }
+
+  if (options.value.pane === 'container-round' || options.value.pane === 'container') {
+    options.value.hoverBoundingBox = false;
+  } else {
+    options.value.hoverBoundingBox = true;
+  }
 };
+
+
+onBeforeMount(() => {
+  initializeData();
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  runImager();
+  // initializeData();
+  window.addEventListener('resize', runImager);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', runImager);
+});
 </script>
 
 <style>
 @import '../../assets/css/drift-basic.css';
+
 .preview-box {
   margin-bottom: 1vh;
 }
@@ -259,11 +254,13 @@ export default {
     cursor: pointer;
     justify-content: center;
   }
+
   .control-box {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     grid-column-gap: 5px;
   }
+
   .control-box .thumb-list {
     display: grid;
     grid-column-gap: 4px;
@@ -273,12 +270,14 @@ export default {
 .choosed-thumb {
   border-radius: 0px;
 }
+
 .pane-container {
   display: none;
   position: absolute;
   z-index: 10000;
   pointer-events: none;
 }
+
 .responsive-image {
   height: auto;
   width: 100%;

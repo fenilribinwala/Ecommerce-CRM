@@ -3,23 +3,20 @@
     <div class="space"></div>
     &nbsp;
     <h2>Your orders</h2>
-
-    <b-tabs>
-      <template slot="tabs">
-        <b-nav-item
+    <BTabs>
+      <template #tabs>
+        <BNavItem
           v-for="(item, ind) in tabs"
           v-bind:key="ind"
           :active="activeTab === item.key"
           @click="tabSelected(item.key)"
-        >{{item.name}}</b-nav-item>
+        >{{item.name}}</BNavItem>
       </template>
-    </b-tabs>
-
+    </BTabs>
     <div class="order-list">
       <div v-for="(order, oid) in filteredOrders" v-bind:key="oid">
         <single-order :order="order"/>
       </div>
-
       <div v-if="filteredOrders.length <= 0" class="empty-info">
         <p>No orders are in this status.</p>
       </div>
@@ -27,71 +24,63 @@
   </div>
 </template>
 
-<script>
-import { mapGetters } from 'vuex';
-import SingleOrder from '@/components/orders/SingleOrder.vue';
+<script setup>
+import {ref, computed, onMounted} from 'vue';
+import {useOrderStore} from '../stores/orderStore';
+import SingleOrder from '../components/orders/SingleOrder.vue';
+import {BTabs, BNavItem} from 'bootstrap-vue-3';
+import _ from 'lodash';
 
-export default {
-  name: 'OrderView',
-  components: {
-    SingleOrder,
+// Initialize store
+const orderStore = useOrderStore();
+
+// Reactive state
+const tabs = ref([
+  {
+    name: 'Orders',
+    key: 'all',
   },
-  data() {
-    return {
-      tabs: [
-        {
-          name: 'Orders',
-          key: 'all',
-        },
-        {
-          name: 'Open Orders',
-          key: 'open',
-        },
-        {
-          name: 'Completed',
-          key: 'completed',
-        },
-        {
-          name: 'Cancelled',
-          key: 'cancelled',
-        },
-      ],
-
-      activeTab: 'all',
-    };
+  {
+    name: 'Open Orders',
+    key: 'open',
   },
-
-  async created() {
-    // Look for all the items from the order list.
-    await this.$store.dispatch('orderStore/getOrderList', '');
+  {
+    name: 'Completed',
+    key: 'completed',
   },
-
-  methods: {
-    tabSelected(key) {
-      this.activeTab = key;
-    },
+  {
+    name: 'Cancelled',
+    key: 'cancelled',
   },
+]);
+const activeTab = ref('all');
 
-  computed: {
-    ...mapGetters({
-      orders: 'orderStore/orders',
-    }),
-
-    filteredOrders() {
-      if (this.activeTab === 'open') {
-        return _.filter(this.orders, i => i.overall_status !== 'COMPLETED' && i.overall_status !== 'CANCELLED');
-      }
-      if (this.activeTab === 'completed') {
-        return _.filter(this.orders, i => i.overall_status === 'COMPLETED');
-      }
-      if (this.activeTab === 'cancelled') {
-        return _.filter(this.orders, i => i.overall_status === 'CANCELLED');
-      }
-
-      return this.orders;
-    },
-  },
+// Methods
+const tabSelected = (key) => {
+  activeTab.value = key;
 };
+
+// Computed properties
+const orders = computed(() => orderStore.orders);
+
+const filteredOrders = computed(() => {
+  if (activeTab.value === 'open') {
+    return _.filter(orders.value, i => i.overall_status !== 'COMPLETED' && i.overall_status !== 'CANCELLED');
+  }
+  if (activeTab.value === 'completed') {
+    return _.filter(orders.value, i => i.overall_status === 'COMPLETED');
+  }
+  if (activeTab.value === 'cancelled') {
+    return _.filter(orders.value, i => i.overall_status === 'CANCELLED');
+  }
+  return orders.value;
+});
+
+// Lifecycle hooks
+onMounted(async () => {
+  // Look for all the items from the order list.
+  await orderStore.getOrderList('');
+});
 </script>
 
 <style lang="scss">

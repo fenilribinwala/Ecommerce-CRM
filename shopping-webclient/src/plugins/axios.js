@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import axios from 'axios';
-import { eventHub } from '@/utils/EventHub';
+import { eventHub } from '../utils/EventHub';
 import { SilentUrls } from '../constants/Constants';
 
-const baseURL = process.env.VUE_APP_API_BASE_URL;
+const baseURL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:4201';
 
 const instance = axios.create({
   baseURL,
@@ -13,12 +13,12 @@ const instance = axios.create({
 instance.interceptors.request.use(
   conf => {
     if (!SilentUrls.includes(conf.url)) {
-      eventHub.$emit('before-request');
+      eventHub.emit('before-request');
     }
     return conf;
   },
   error => {
-    eventHub.$emit('request-error');
+    eventHub.emit('request-error');
     return Promise.reject(error);
   }
 );
@@ -27,12 +27,13 @@ instance.interceptors.response.use(
     // console.log(response.request.responseURL)
     // const len = response.request.responseURL.length;
     // const url = response.request.responseURL.substring(baseURL.length - 1, len);
-    eventHub.$emit('after-response');
+    eventHub.emit('after-response');
     return response;
   },
   error => {
-    eventHub.$emit('response-error');
+    eventHub.emit('response-error');
     return Promise.reject(error);
   }
 );
-Vue.prototype.$axios = instance;
+// Vue.prototype.$axios = instance;
+export default instance;
